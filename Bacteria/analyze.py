@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/sw/bin/python2.7
 __author__ = 'Sanjarbek hudaiberdiev'
 
 import os
@@ -20,6 +20,7 @@ from operator import itemgetter
 from lib import classes as cl
 from itertools import combinations
 import numpy as np
+import pandas as pd
 
 if sys.platform == 'darwin':
     project_data_path= '/Users/hudaiber/Projects/NewSystems/data/Bacteria'
@@ -106,11 +107,7 @@ def count_profiles_in_neighborhoods(neighborhoods_path, limit_to, comb_size):
     gnm2weight = map_genome2weight()
     
     neighborhoods = [cl.Neighborhood(os.path.join(neighborhoods_path, f)) for f in os.listdir(neighborhoods_path)]
-    
-    # profile_neighborhoods = [[g.cogid for g in n.genes] for n in neighborhoods]
-    # profile_neighborhoods = [" ".join(nbr) for nbr in profile_neighborhoods]
-    # profile_neighborhoods = [nbr.split() for nbr in profile_neighborhoods]
-    
+
     profile_stats = {}
     for nbr in neighborhoods:
         src_name = nbr.genes[0].src
@@ -130,7 +127,7 @@ def count_profiles_in_neighborhoods(neighborhoods_path, limit_to, comb_size):
     profile_weights = [(k, v.weight) for k, v in profile_stats.items()]
     profile_weights = sorted(profile_weights, key=itemgetter(1), reverse=True)
 
-    pickle.dump(profile_weights, open('profile_weights.p','w'))
+    pickle.dump(profile_weights, open('profile_weights.p', 'w'))
     profile_weights = pickle.load(open('profile_weights.p'))
 
     top_profiles = [k for (k, v) in profile_weights[:limit_to]]
@@ -143,27 +140,21 @@ def count_profiles_in_neighborhoods(neighborhoods_path, limit_to, comb_size):
     pivot_ind = np.where(np.cumsum(weight_values)/np.sum(weight_values)>=0.9)[0][0]
     pivot_value = weight_values[pivot_ind]
 
-    counted_combinations = {k:v for k,v in counted_combinations.items() if v.weight>pivot_value}
+    M = pd.DataFrame([], columns=['Comb', 'weight', 'count'])
+    M['Comb'] = counted_combinations.keys()
+    M['weight'] = [v.weight for v in counted_combinations.values()]
+    M['count'] = [v.count for v in counted_combinations.values()]
 
-    print 'started writing'
-
-    fout = open('%d_%d.tab'%(limit_to, comb_size), 'w')
-    fout.write("Comb\tweight\tcount\n")
-    for k, v in counted_combinations.items():
-        fout.write("%s\t%f\t%d\n" % (k, v.weight, v.count))
-    fout.close()
+    M = M[M['count'] > 1]
+    M = M[M['weight'] > pivot_value]
+    M = M.sort('weight',ascending=False)
+    fout = open('%d_%d.tab' % (limit_to, comb_size), 'w')
+    M.to_csv(fout, sep="\t", index=False)
 
 
 if __name__=='__main__':
 
-    # limit_to = int(sys.argv[1])
-    # comb_size = int(sys.argv[2])
-    # src2org = map_src2org()
-    # gnm2weights = map_genome2weight()
-    # print gnm2weights
+    limit_to  = int(sys.argv[1])
+    comb_size = int(sys.argv[2])
 
-    # limit_to = 500
-    # comb_size = 3
-    # count_profiles_in_neighborhoods(os.path.join(project_data_path,'genes_and_flanks', 'win_10', 'merged'), limit_to, comb_size)
-
-    test()
+    count_profiles_in_neighborhoods(os.path.join(project_data_path, 'genes_and_flanks', 'win_10', 'merged'), limit_to, comb_size)
