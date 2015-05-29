@@ -57,8 +57,6 @@ def count_combinations(neighborhoods, profile_list, r, src2org, gnm2weight):
 
     key_fmt = "-".join(["%s" for i in range(r)])
     combination_count = {}
-    cnt = 0
-
     for n in neighborhoods:
         cur_src = n.genes[0].src
         cur_org = src2org[cur_src]
@@ -70,16 +68,11 @@ def count_combinations(neighborhoods, profile_list, r, src2org, gnm2weight):
         for comb in combination_list:
 
             k = key_fmt % comb
-            if k == 'COG0550-COG0551-cd01913':
-                cnt += 1
             if k in combination_count:
                 combination_count[k].count += 1
                 combination_count[k].weight += gnm2weight[cur_org]
             else:
                 combination_count[k] = cl.ProfileCount(1, gnm2weight[cur_org])
-        # cnt += 1
-        # print cnt, len(combination_count)
-    print cnt
     return combination_count
 
 
