@@ -156,5 +156,5 @@ if __name__=='__main__':
 
     limit_to  = int(sys.argv[1])
     comb_size = int(sys.argv[2])
-
+    
     count_profiles_in_neighborhoods(os.path.join(project_data_path, 'genes_and_flanks', 'win_10', 'merged'), limit_to, comb_size)
