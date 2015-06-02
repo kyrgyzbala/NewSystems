@@ -5,9 +5,8 @@ import sys
 import numpy as np
 from sklearn.cluster import KMeans
 import pickle
-from multiprocessing import Process
+from multiprocessing import Pool
 
-n_clusters = int(sys.argv[1])
 
 def cluster_neighborhoods(n_clusters):
     print "Starting Kmeans with cluster number: %d" % n_clusters
@@ -30,8 +29,5 @@ if __name__=='__main__':
     top_500_profiles = [k for k,v in profile_weights[:500]]
     conserved_profiles = [l.split()[0].split('-') for l in open('500_7.tab').readlines()[1:]]
 
-    for cl in [10,20,30,40,50,60,70,80,90,10]:
-        p = Process(target=cluster_neighborhoods, args=(cl,))
-        p.start()
-        p.join()
-    
+    n_clusters = int(sys.argv[1])
+    cluster_neighborhoods(n_clusters)
