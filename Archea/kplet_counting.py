@@ -199,8 +199,6 @@ if __name__=='__main__':
 
     # count_profiles_in_neighborhoods(neighborhoods_path, limit_to, combination_size)
     neighborhoods_path = os.path.join(gv.project_data_path, 'Archea', 'genes_and_flanks', 'win_10', 'pty')
-
     write_kmers_to_database(combination_size, neighborhoods_path)
     # combination_size = 6
     # write_kmers_to_database(combination_size, neighborhoods_path)
-
