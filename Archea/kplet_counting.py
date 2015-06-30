@@ -176,7 +176,6 @@ def write_kmers_to_database(combination_size, neighborhoods_path):
         #     continue
         # print f
         kplets = extract_kplets(os.path.join(neighborhoods_path, f), combination_size)
-        print kplets
         db.store_kplets(kplets, f)
 
         total += len(kplets)
