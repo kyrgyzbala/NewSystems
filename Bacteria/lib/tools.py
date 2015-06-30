@@ -1,28 +1,33 @@
 __author__ = 'Sanjarbek Hudaiberdiev'
 
 import sys
-if sys.platform=='darwin':
+if sys.platform == 'darwin':
     sys.path.append('/Users/hudaiber/Projects/lib/BioPy/')
-elif sys.platform=='linux2':
+    sys.path.append('/Users/hudaiber/Projects/SystemFiles/')
+elif sys.platform == 'linux2':
     sys.path.append('/home/hudaiber/Projects/lib/BioPy/')
-from BioClasses import Gene
+    sys.path.append('/home/hudaiber/Projects/SystemFiles/')
+import global_variables as gv
+import os
 
-def pty2genes_file2list(pty_file):
-    gene_list = []
+def target_profiles():
+    profiles_file = os.path.join(gv.project_data_path, 'CDD/profile_ids_all.txt')
+    return [l.strip() for l in open(profiles_file).readlines()]
 
-    for l in open(pty_file):
-        terms = l.strip().split('\t')
 
-        gid = terms[0]
-        coordinates = terms[1]
-        strand = terms[2]
-        genome = terms[3]
-        chromosome = terms[4]
-        annotations = terms[5] if len(terms) > 5 else ""
+def map_src2org():
+    return {l.split()[1]:l.split()[0] for l in open(os.path.join(gv.data_path, 'info', 'map_gnm_src.txt')).readlines()}
 
-        pfrom, pto = coordinates.split('..')
-        curGene = Gene(source=chromosome, gid=gid, pFrom=pfrom, pTo=pto, organism=genome, strand=strand, cogid=annotations)
-        gene_list.append(curGene)
 
-    return gene_list
+def map_genome2weight():
+    return {l.split()[0] : float(l.split()[1]) for l in open(os.path.join(gv.data_path, 'CDD', 'Prok1402_ad.weight.tab')).readlines()}
 
+
+def map_profile2def():
+    def_map = {l.split('\t')[1]: l.split('\t')[3] for l in open(os.path.join(gv.data_path, 'CDD', 'cdfind_pub_ad.dat')).readlines()}
+    def_map["-"] = " "
+    return def_map
+
+
+def union(a, b):
+    return list(set(a) | set(b))
