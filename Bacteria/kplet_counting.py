@@ -171,12 +171,10 @@ def write_kmers_to_database(combination_size, neighborhoods_path):
         cnt += 1
         # if cnt<432:
         #     continue
+        gid = f.split('_')[0]
 
         kplets = extract_kplets(os.path.join(neighborhoods_path, f), combination_size)
-
-        # sys.exit()
-        # db.store_kplets(kplets, f)
-
+        db.store_kplets(kplets, f)
         total += len(kplets)
         if len(kplets) == 0:
             zeros += 1
