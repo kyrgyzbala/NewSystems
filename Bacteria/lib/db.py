@@ -58,14 +58,14 @@ def insert_pentaplet(profiles):
 
 def get_file_id(fname):
     sql_cmd = """select id from bacteria_win10_files where name='%s'"""
-    sql_cmd = sql_cmd%fname
+    sql_cmd %= fname
     cursor = setup_cursor()
     cursor.execute(sql_cmd)
     rows = cursor.fetchall()
     assert len(rows) <= 1
 
     if not rows:
-        raise Exception("File not found in database:%s"%fname)
+        raise Exception("File not found in database:%s" % fname)
 
     return rows[0][0]
 
@@ -107,7 +107,6 @@ def store_kplets(kplets, fname):
 
         file_id = get_file_id(fname)
         insert_pentaplet_file(kplet_id, file_id)
-
 
 
 if __name__=='__main__':
