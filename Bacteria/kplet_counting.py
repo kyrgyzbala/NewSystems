@@ -20,24 +20,24 @@ import pandas as pd
 from operator import itemgetter
 
 
-def flatten(TheList):
-    listIsNested = True
+def flatten(input_list):
+    list_is_nested = True
 
-    while listIsNested:
-        keepChecking = False
-        Temp = []
+    while list_is_nested:
+        keep_checking = False
+        temp = []
 
-        for element in TheList:
+        for element in input_list:
             if isinstance(element,list) or isinstance(element,tuple):
-                Temp.extend(element)
-                keepChecking = True
+                temp.extend(element)
+                keep_checking = True
             else:
-                Temp.append(element)
+                temp.append(element)
 
-        listIsNested = keepChecking
-        TheList = Temp[:]
+        list_is_nested = keep_checking
+        input_list = temp[:]
 
-    return TheList
+    return input_list
 
 
 def count_combinations(neighborhoods, profile_list, r, src2org, gnm2weight):
