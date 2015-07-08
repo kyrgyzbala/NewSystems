@@ -169,8 +169,8 @@ def write_kmers_to_database(combination_size, neighborhoods_path):
         if not f.endswith('_annot.pty'):
             continue
         cnt += 1
-        # if cnt<432:
-        #     continue
+        if cnt<10553:
+            continue
         gid = f.split('_')[0]
 
         kplets = extract_kplets(os.path.join(neighborhoods_path, f), combination_size)
