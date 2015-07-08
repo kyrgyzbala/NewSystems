@@ -25,7 +25,7 @@ def cluster_neighborhoods(n_clusters, feature_profiles, conserved_profiles):
 
     for i in range(len(conserved_profiles)):
         for j in range(len(feature_profiles)):
-            if feature_profiles[j] in conserved_profiles[i]:
+            if feature_profiles[j] in conserved_profiles[i][1]:
                 data_matrix[i, j] = 1
     data_matrix *= 100
     n_jobs = n_clusters/10
@@ -50,26 +50,41 @@ def clustering_postprocess(n_clusters, conserved_profile_nbrhds):
     predictions = pickle.load(open(predictions_file))
 
     all_cluster_profiles = []
+    all_cluster_neighborhoods = []
 
     for i in range(n_clusters):
         indcs = np.where(predictions == i)
-        cluster_mapped = conserved_profile_nbrhds[indcs]
+        cluster_mapped = [conserved_profile_nbrhds[i] for i in indcs[0]]
         cluster_profiles = set()
+        cluster_neighborhood_ids = []
 
         for nbr in cluster_mapped:
-            cluster_profiles = cluster_profiles | set(nbr)
+            cluster_profiles = cluster_profiles | set(nbr[1])
+            cluster_neighborhood_ids.append(nbr[0])
         cluster_profiles = sorted(list(cluster_profiles))
         all_cluster_profiles.append(cluster_profiles)
+        all_cluster_neighborhoods.append(cluster_neighborhood_ids)
 
     cluster_path = os.path.join(gv.project_data_path, 'Archea/clustering', str(n_clusters))
     if not os.path.exists(cluster_path):
         os.mkdir(cluster_path)
 
     cluster_profiles_file = os.path.join(cluster_path, "clustered_profiles.txt")
-    with open(cluster_profiles_file, "w") as f:
-        for cl in all_cluster_profiles:
-            f.write("\t".join(cl)+"\n")
+    cluster_neighborhood_file = os.path.join(cluster_path, "clustered_neighborhoods.txt")
 
+    with open(cluster_profiles_file, "w") as f:
+        f.write("Cluster no\tCommunity\n")
+        cnt = 1
+        for cl in all_cluster_profiles:
+            f.write(str(cnt) + "\t" + " ".join(cl)+"\n")
+            cnt += 1
+
+    with open(cluster_neighborhood_file, "w") as f:
+        f.write("Cluster no\tNeighborhood IDs\n")
+        cnt = 1
+        for cl in all_cluster_neighborhoods:
+            f.write(str(cnt) + "\t" + " ".join(cl)+"\n")
+            cnt += 1
     return all_cluster_profiles
 
 
@@ -80,11 +95,11 @@ if __name__=='__main__':
 
     conserved_profiles_file = os.path.join(gv.project_data_path, 'Archea/genes_and_flanks/win_10/kplets/pentaplets.csv')
 
-    conserved_profiles = np.asanyarray([l.split(',')[1:6] for l in open(conserved_profiles_file).readlines()[1:]])
+    conserved_profiles = [(l.split(',')[0], l.split(',')[1:6]) for l in open(conserved_profiles_file).readlines()[1:]]
     # conserved_profiles_map = {l.split(',')[1:5]: float(l.split()[1]) for l in open(conserved_profiles_file).readlines()[1:]}
 
     # n_clusters = int(sys.argv[1])
     n_clusters = 10
-    # cluster_neighborhoods(n_clusters, top_500_profiles, conserved_profiles)
+    cluster_neighborhoods(n_clusters, top_500_profiles, conserved_profiles)
 
     cluster_profiles = clustering_postprocess(n_clusters, conserved_profiles)
