@@ -83,8 +83,8 @@ if __name__=='__main__':
     conserved_profiles = np.asanyarray([l.split(',')[1:6] for l in open(conserved_profiles_file).readlines()[1:]])
     # conserved_profiles_map = {l.split(',')[1:5]: float(l.split()[1]) for l in open(conserved_profiles_file).readlines()[1:]}
 
-    # n_clusters = int(sys.argv[1])
-    n_clusters = 10
-    # cluster_neighborhoods(n_clusters, top_500_profiles, conserved_profiles)
+    n_clusters = int(sys.argv[1])
+    # n_clusters = 50
+    cluster_neighborhoods(n_clusters, top_500_profiles, conserved_profiles)
 
     cluster_profiles = clustering_postprocess(n_clusters, conserved_profiles)
