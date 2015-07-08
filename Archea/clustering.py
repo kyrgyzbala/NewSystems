@@ -44,9 +44,9 @@ def cluster_neighborhoods(n_clusters, feature_profiles, conserved_profiles):
     pickle.dump(predictions, open(predictions_file, 'w'))
 
 
-def clustering_postprocess(n_clusters, conserved_profile_nbrhds, conserved_profiles_map, weight_cutoff):
+def clustering_postprocess(n_clusters, conserved_profile_nbrhds):
 
-    predictions_file = os.path.join(gv.project_data_path, 'clustering/models_predictions/clustering_predictions_%d.p' % n_clusters)
+    predictions_file = os.path.join(gv.project_data_path, 'Archea/clustering/models_predictions/clustering_predictions_%d.p' % n_clusters)
     predictions = pickle.load(open(predictions_file))
 
     all_cluster_profiles = []
@@ -55,20 +55,17 @@ def clustering_postprocess(n_clusters, conserved_profile_nbrhds, conserved_profi
         indcs = np.where(predictions == i)
         cluster_mapped = conserved_profile_nbrhds[indcs]
         cluster_profiles = set()
-        cluster_mapped = [k for k in cluster_mapped if conserved_profiles_map[k] > weight_cutoff]
-        if len(cluster_mapped) == 0:
-            continue
 
         for nbr in cluster_mapped:
-            cluster_profiles = cluster_profiles | set(nbr.split('-'))
+            cluster_profiles = cluster_profiles | set(nbr)
         cluster_profiles = sorted(list(cluster_profiles))
         all_cluster_profiles.append(cluster_profiles)
 
-    cluster_path = os.path.join(gv.project_data_path, 'clustering', str(n_clusters))
+    cluster_path = os.path.join(gv.project_data_path, 'Archea/clustering', str(n_clusters))
     if not os.path.exists(cluster_path):
         os.mkdir(cluster_path)
 
-    cluster_profiles_file = os.path.join(cluster_path, "cluster_profiles_cutoff_%f.txt" % weight_cutoff)
+    cluster_profiles_file = os.path.join(cluster_path, "clustered_profiles.txt")
     with open(cluster_profiles_file, "w") as f:
         for cl in all_cluster_profiles:
             f.write("\t".join(cl)+"\n")
@@ -88,7 +85,6 @@ if __name__=='__main__':
 
     # n_clusters = int(sys.argv[1])
     n_clusters = 10
-    cluster_neighborhoods(n_clusters, top_500_profiles, conserved_profiles)
+    # cluster_neighborhoods(n_clusters, top_500_profiles, conserved_profiles)
 
-    weight_cutoff = 1.2
-    cluster_profiles = clustering_postprocess(n_clusters, conserved_profiles, conserved_profiles_map, weight_cutoff)
+    cluster_profiles = clustering_postprocess(n_clusters, conserved_profiles)
