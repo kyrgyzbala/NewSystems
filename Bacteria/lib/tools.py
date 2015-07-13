@@ -9,6 +9,7 @@ elif sys.platform == 'linux2':
     sys.path.append('/home/hudaiber/Projects/SystemFiles/')
 import global_variables as gv
 import os
+import classes as cl
 
 def target_profiles():
     profiles_file = os.path.join(gv.project_data_path, 'CDD/profile_ids_all.txt')
@@ -16,7 +17,7 @@ def target_profiles():
 
 
 def map_src2org():
-    return {l.split()[1]:l.split()[0] for l in open(os.path.join(gv.data_path, 'info', 'map_gnm_src.txt')).readlines()}
+    return {l.split()[1]:l.split()[0] for l in open(os.path.join(gv.data_path, 'info', 'map_gnm_src_pty.txt')).readlines()}
 
 
 def map_genome2weight():
@@ -29,5 +30,27 @@ def map_profile2def():
     return def_map
 
 
+def map_gid2cdd():
+    cdd_map = {}
+    for l in open(os.path.join(gv.data_path, 'CDD', 'all_Prok1402.ccp.csv')):
+        terms = l.split(',')
+        gid = terms[0]
+        profile = terms[6]
+        if gid in cdd_map:
+            cdd_map[gid] += " %s"%profile
+        else:
+            cdd_map[gid] = profile
+
+    return cdd_map
+
+
+
+
 def union(a, b):
     return list(set(a) | set(b))
+
+
+def load_neighborhoods(path):
+    
+    return [cl.Neighborhood(os.path.join(path, f)) for f in os.listdir(path)]
+

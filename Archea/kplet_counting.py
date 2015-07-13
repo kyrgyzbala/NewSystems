@@ -172,12 +172,11 @@ def write_kmers_to_database(combination_size, neighborhoods_path):
         if not f.endswith('_annot.pty'):
             continue
         cnt += 1
-        # if cnt<432:
-        #     continue
-        # print f
+        if cnt<2322:
+            continue
+
         kplets = extract_kplets(os.path.join(neighborhoods_path, f), combination_size)
         db.store_kplets(kplets, f)
-
         total += len(kplets)
         if len(kplets) == 0:
             zeros += 1
@@ -187,18 +186,7 @@ def write_kmers_to_database(combination_size, neighborhoods_path):
 
 if __name__=='__main__':
 
-    # limit_to  = int(sys.argv[1])
-    # combination_size = int(sys.argv[2])
-    #
-
-    limit_to = 1000
     combination_size = 5
 
-    # file = '/Users/hudaiber/Projects/NewSystems/data/Archea/genes_and_flanks/win_10/pty/294494794_annot.pty'
-    # print len(count_kplets(file, combination_size))
-
-    # count_profiles_in_neighborhoods(neighborhoods_path, limit_to, combination_size)
     neighborhoods_path = os.path.join(gv.project_data_path, 'Archea', 'genes_and_flanks', 'win_10', 'pty')
     write_kmers_to_database(combination_size, neighborhoods_path)
-    # combination_size = 6
-    # write_kmers_to_database(combination_size, neighborhoods_path)
