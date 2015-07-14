@@ -65,7 +65,7 @@ def get_file_id(fname):
     assert len(rows) <= 1
 
     if not rows:
-        raise Exception("File not found in database:%s"%fname)
+        raise Exception("File not found in database:%s" % fname)
 
     return rows[0][0]
 
@@ -80,7 +80,6 @@ def insert_pentaplet_file(kplet_id, file_id):
 
 
 def store_kplets(kplets, fname):
-    sql_fmt = """"""
 
     for kplet in kplets:
         l = list(kplet)
@@ -95,9 +94,30 @@ def store_kplets(kplets, fname):
         file_id = get_file_id(fname)
         insert_pentaplet_file(kplet_id, file_id)
 
+def get_heavy_archaea_kplets():
+
+    sql_cmd= """select apc.*, s1.cnt, s1.wgt
+                from (
+                        select ap.id ,count(*) as cnt, sum(w.weight) as wgt
+                        from archea_5plets ap
+                        inner join archea_5plets_win10 apw on ap.id = apw.kplet_id
+                        inner join archea_win10_files awf on apw.file_id = awf.id
+                        inner join sources s on awf.source_id=s.id
+                        inner join weights w on w.genome_id=s.genome_id
+                        group by ap.id ) s1
+                inner join archea_5plets_codes apc on s1.id=apc.id
+                order by s1.wgt desc"""
+
+    cursor = setup_cursor()
+    print 'executing'
+    cursor.execute(sql_cmd)
+    print 'done executing'
+    results = cursor.fetchall()
+    print 'done fetchall'
+    # print len(results)
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
 
-    fname2id = file_name2id()
-    print fname2id
+    get_heavy_archaea_kplets()
+

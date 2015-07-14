@@ -18,7 +18,6 @@ from itertools import product
 import numpy as np
 import pandas as pd
 from operator import itemgetter
-import collections
 
 
 def flatten(TheList):

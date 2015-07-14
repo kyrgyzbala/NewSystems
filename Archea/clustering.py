@@ -11,7 +11,7 @@ import os
 import numpy as np
 from sklearn.cluster import KMeans
 import pickle
-import lib.classes as cl
+from lib import db
 
 
 def cluster_neighborhoods(n_clusters, feature_profiles, conserved_profiles):
@@ -85,20 +85,23 @@ def clustering_postprocess(n_clusters, conserved_profile_nbrhds):
         for cl in all_cluster_neighborhoods:
             f.write(str(cnt) + "\t" + " ".join(cl)+"\n")
             cnt += 1
+
     return all_cluster_profiles
 
 
 if __name__=='__main__':
 
-    profile_weights = open('files/profile_weights.tab').readlines()
-    top_500_profiles = np.asarray([l.strip().split()[1] for l in profile_weights[:500]])
+    # profile_weights = open('files/profile_weights.tab').readlines()
+    # top_500_profiles = np.asarray([l.strip().split()[1] for l in profile_weights[:500]])
+    #
+    # conserved_profiles_file = os.path.join(gv.project_data_path, 'Archea/genes_and_flanks/win_10/kplets/pentaplets.csv')
+    #
+    # conserved_profiles = [(l.split(',')[0], l.split(',')[1:6]) for l in open(conserved_profiles_file).readlines()[1:]]
+    #
+    # n_clusters = int(sys.argv[1])
+    # # n_clusters = 50
+    # cluster_neighborhoods(n_clusters, top_500_profiles, conserved_profiles)
+    #
+    # cluster_profiles = clustering_postprocess(n_clusters, conserved_profiles)
 
-    conserved_profiles_file = os.path.join(gv.project_data_path, 'Archea/genes_and_flanks/win_10/kplets/pentaplets.csv')
-
-    conserved_profiles = [(l.split(',')[0], l.split(',')[1:6]) for l in open(conserved_profiles_file).readlines()[1:]]
-    
-    n_clusters = int(sys.argv[1])
-    # n_clusters = 50
-    cluster_neighborhoods(n_clusters, top_500_profiles, conserved_profiles)
-
-    cluster_profiles = clustering_postprocess(n_clusters, conserved_profiles)
+    heavy_kplets = db.
