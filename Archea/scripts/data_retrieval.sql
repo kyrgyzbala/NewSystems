@@ -1,4 +1,4 @@
-select s1.*, s2.*
+select apc.*, s1.cnt, s1.wgt 
 from (
 		select ap.id ,count(*) as cnt, sum(w.weight) as wgt
 		from archea_5plets ap
@@ -7,8 +7,8 @@ from (
 		inner join sources s on awf.source_id=s.id
 		inner join weights w on w.genome_id=s.genome_id
 		group by ap.id ) s1
-inner join tmp s2 on s1.id=s2.id
-order by s1.wgt;
+inner join archea_5plets_codes apc on s1.id=apc.id
+order by s1.wgt desc;
 
 
 select ap.id ,count(*) as cnt, sum(w.weight) as wgt

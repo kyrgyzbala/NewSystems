@@ -41,3 +41,11 @@ class Neighborhood(object):
                 break
         self.genes = upstream + self.genes + downstream
         self.flank_extension = True
+
+
+class kplet(object):
+    def __init__(self, id, profiles, weight=None, files=None):
+        self.profiles = profiles
+        self.id = id
+        self.weight = weight
+        self.files = files

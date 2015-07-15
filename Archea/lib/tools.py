@@ -9,6 +9,9 @@ elif sys.platform == 'linux2':
     sys.path.append('/home/hudaiber/Projects/SystemFiles/')
 import global_variables as gv
 import os
+import classes as cl
+from operator import itemgetter
+
 
 def target_profiles():
     profiles_file = os.path.join(gv.project_data_path, 'Archea/arCOG/selected_arcogs.txt')
@@ -49,5 +52,33 @@ def union(a, b):
     return list(set(a) | set(b))
 
 
-def get_neighborhoods_of_kplet_ids(kplet_ids):
+def get_weighted_profiles_from_neighborhoods(neighborhoods_path, exclude_target=True):
+
+    if exclude_target:
+        _target_profiles = target_profiles()
+    _src2org = map_src2org()
+    _gnm2weight = map_genome2weight()
+    neighborhoods = [cl.Neighborhood(os.path.join(neighborhoods_path, f)) for f in os.listdir(neighborhoods_path)]
+
+    profile_stats = {}
+    for nbr in neighborhoods:
+        src_name = nbr.genes[0].src
+        org_name = _src2org[src_name]
+        org_weight = _gnm2weight[org_name] if org_name in _gnm2weight else 1
+        for g in nbr.genes:
+            if g.cogid == "":
+                continue
+            for tmpCog in g.cogid.split():
+                if exclude_target and tmpCog in _target_profiles:
+                    continue
+                if tmpCog in profile_stats:
+                    profile_stats[tmpCog].weight += org_weight
+                    profile_stats[tmpCog].count += 1
+                else:
+                    profile_stats[tmpCog] = cl.ProfileCount(1, org_weight)
+
+    profile_weights = [(k, v.weight) for k, v in profile_stats.items()]
+    profile_weights = sorted(profile_weights, key=itemgetter(1), reverse=True)
+
+    return profile_weights
 

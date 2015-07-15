@@ -75,6 +75,7 @@ def count_profiles_in_neighborhoods(neighborhoods_path, save_path, limit_to, com
     for nbr in neighborhoods:
         src_name = nbr.genes[0].src
         org_name = src2org[src_name]
+        org_weight = gnm2weight[org_name] if org_name in gnm2weight else 1
         for g in nbr.genes:
             if g.cogid == "":
                 continue
@@ -82,16 +83,20 @@ def count_profiles_in_neighborhoods(neighborhoods_path, save_path, limit_to, com
                 if tmpCog in target_profiles:
                     continue
                 if tmpCog in profile_stats:
-                    profile_stats[tmpCog].weight += gnm2weight[org_name]
+                    profile_stats[tmpCog].weight += org_weight
                     profile_stats[tmpCog].count += 1
                 else:
-                    profile_stats[tmpCog] = cl.ProfileCount(1, gnm2weight[org_name])
+                    profile_stats[tmpCog] = cl.ProfileCount(1, org_weight)
 
     profile_weights = [(k, v.weight) for k, v in profile_stats.items()]
     profile_weights = sorted(profile_weights, key=itemgetter(1), reverse=True)
 
     # pickle.dump(profile_weights, open('files/profile_weights.p', 'w'))
     # profile_weights = pickle.load(open('files/profile_weights.p'))
+
+    with open('files/profile_weights.tab','w') as f:
+        for profile, weight in profile_weights[:limit_to]:
+            f.write('%f\t%s\n'%(weight, profile))
 
     top_profiles = [k for (k, v) in profile_weights[:limit_to]]
     print 'started counting'
@@ -128,9 +133,7 @@ def extract_kplets(file, combination_size):
 
     multiples = [l for l in annotations if len(l) > 1]
 
-    result_combinations = []
-
-    if len(multiples)>0 and combination_size > len(multiples):
+    if combination_size > len(multiples) > 0:
         tmp_comb_size = combination_size - len(multiples)
         single_combinations = combinations(singles, tmp_comb_size)
 
@@ -188,4 +191,6 @@ if __name__=='__main__':
     combination_size = 5
 
     neighborhoods_path = os.path.join(gv.project_data_path, 'Archea', 'genes_and_flanks', 'win_10', 'pty')
-    write_kmers_to_database(combination_size, neighborhoods_path)
+    count_profiles_in_neighborhoods(neighborhoods_path, './', 500, 10)
+    # write_kmers_to_database(combination_size, neighborhoods_path)
+

@@ -11,14 +11,13 @@ import os
 import numpy as np
 from sklearn.cluster import KMeans
 import pickle
-from lib import db
-
+from lib import tools as t
+import lib.classes as cl
+from operator import itemgetter
+import matplotlib.pyplot as plt
 
 def cluster_neighborhoods(n_clusters, feature_profiles, conserved_profiles):
     print "Generating data matrix for clustering"
-
-    # n_clusters=10
-    # feature_profiles = top_500_profiles
 
     feature_size = len(feature_profiles)
     data_matrix = np.zeros((len(conserved_profiles), feature_size))
@@ -89,7 +88,27 @@ def clustering_postprocess(n_clusters, conserved_profile_nbrhds):
     return all_cluster_profiles
 
 
-if __name__=='__main__':
+def get_popular_profiles(kplet_rows, limit_to):
+    profile_stats = {}
+    for r in kplet_rows:
+        wgt = r[7]
+        cnt = r[6]
+        for profile in r[1:6]:
+            if profile in profile_stats:
+                profile_stats[profile].count += cnt
+                profile_stats[profile].weight += wgt
+            else:
+                profile_stats[profile] = cl.ProfileCount(cnt, wgt)
+
+    profile_weights = [(k, v.weight) for k, v in profile_stats.items()]
+    profile_weights = sorted(profile_weights, key=itemgetter(1), reverse=True)
+    for p in profile_weights[:500]:
+        print p
+    sys.exit()
+
+
+
+if __name__ == '__main__':
 
     # profile_weights = open('files/profile_weights.tab').readlines()
     # top_500_profiles = np.asarray([l.strip().split()[1] for l in profile_weights[:500]])
@@ -104,4 +123,12 @@ if __name__=='__main__':
     #
     # cluster_profiles = clustering_postprocess(n_clusters, conserved_profiles)
 
-    heavy_kplets = db.
+
+    neighborhoods_path = os.path.join(gv.project_data_path, 'Archea', 'genes_and_flanks', 'win_10', 'pty')
+
+    neighborhood_profiles = t.get_weighted_profiles_from_neighborhoods(neighborhoods_path, exclude_target=False)
+    limit_to = 1000
+
+    # heavy_kplets = db.get_heavy_archaea_kplets()
+
+    # get_popular_profiles(heavy_kplets, 1000)

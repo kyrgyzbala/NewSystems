@@ -109,15 +109,14 @@ def get_heavy_archaea_kplets():
                 order by s1.wgt desc"""
 
     cursor = setup_cursor()
-    print 'executing'
     cursor.execute(sql_cmd)
-    print 'done executing'
-    results = cursor.fetchall()
-    print 'done fetchall'
-    # print len(results)
+
+    return cursor.fetchall()
 
 
 if __name__ == '__main__':
 
-    get_heavy_archaea_kplets()
+    kplets_ranked = get_heavy_archaea_kplets()
 
+    # for kplet in kplets_ranked[:100]:
+    #     print kplet
