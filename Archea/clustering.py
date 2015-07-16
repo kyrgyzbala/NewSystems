@@ -6,13 +6,19 @@ if sys.platform=='darwin':
     sys.path.append('/Users/hudaiber/Projects/SystemFiles/')
 elif sys.platform=='linux2':
     sys.path.append('/home/hudaiber/Projects/SystemFiles/')
+
+reload(sys)
+sys.setdefaultencoding("utf-8")
+
 import global_variables as gv
 import os
 import numpy as np
 from sklearn.cluster import KMeans
 import pickle
+from lib import db
 from lib import tools as t
 import lib.classes as cl
+
 from operator import itemgetter
 import matplotlib.pyplot as plt
 
@@ -24,7 +30,7 @@ def cluster_neighborhoods(n_clusters, feature_profiles, conserved_profiles):
 
     for i in range(len(conserved_profiles)):
         for j in range(len(feature_profiles)):
-            if feature_profiles[j] in conserved_profiles[i][1]:
+            if feature_profiles[j] in conserved_profiles[i][1:6]:
                 data_matrix[i, j] = 1
     data_matrix *= 100
     n_jobs = n_clusters/10
@@ -36,14 +42,17 @@ def cluster_neighborhoods(n_clusters, feature_profiles, conserved_profiles):
 
     estimator_file = os.path.join(gv.project_data_path, 'Archea/clustering/models_predictions/', 'clustering_estimator_%d.p' % n_clusters)
     predictions_file = os.path.join(gv.project_data_path, 'Archea/clustering/models_predictions/', 'clustering_predictions_%d.p' % n_clusters)
+    data_matrix_file = 'files/data_matrix.p'
+
     print "Clustering finished. Writing the results to files:"
     print "     ", estimator_file
     print "     ", predictions_file
-    pickle.dump(estimator, open(estimator_file, 'w'))
-    pickle.dump(predictions, open(predictions_file, 'w'))
+    # pickle.dump(estimator, open(estimator_file, 'w'))
+    # pickle.dump(predictions, open(predictions_file, 'w'))
+    # pickle.dump(data_matrix, open(data_matrix_file, 'w'))
 
 
-def clustering_postprocess(n_clusters, conserved_profile_nbrhds):
+def clustering_postprocess(n_clusters, conserved_profiles):
 
     predictions_file = os.path.join(gv.project_data_path, 'Archea/clustering/models_predictions/clustering_predictions_%d.p' % n_clusters)
     predictions = pickle.load(open(predictions_file))
@@ -53,7 +62,7 @@ def clustering_postprocess(n_clusters, conserved_profile_nbrhds):
 
     for i in range(n_clusters):
         indcs = np.where(predictions == i)
-        cluster_mapped = [conserved_profile_nbrhds[i] for i in indcs[0]]
+        cluster_mapped = [conserved_profiles[i] for i in indcs[0]]
         cluster_profiles = set()
         cluster_neighborhood_ids = []
 
@@ -102,10 +111,8 @@ def get_popular_profiles(kplet_rows, limit_to):
 
     profile_weights = [(k, v.weight) for k, v in profile_stats.items()]
     profile_weights = sorted(profile_weights, key=itemgetter(1), reverse=True)
-    for p in profile_weights[:500]:
+    for p in profile_weights[:limit_to]:
         print p
-    sys.exit()
-
 
 
 if __name__ == '__main__':
@@ -123,12 +130,14 @@ if __name__ == '__main__':
     #
     # cluster_profiles = clustering_postprocess(n_clusters, conserved_profiles)
 
-
     neighborhoods_path = os.path.join(gv.project_data_path, 'Archea', 'genes_and_flanks', 'win_10', 'pty')
 
     neighborhood_profiles = t.get_weighted_profiles_from_neighborhoods(neighborhoods_path, exclude_target=False)
     limit_to = 1000
+    feature_profiles = [k[0] for k in neighborhood_profiles[:limit_to]]
 
-    # heavy_kplets = db.get_heavy_archaea_kplets()
+    kplets = db.get_archaea_kplets()
+    n_clusters = 10
+    cluster_neighborhoods(n_clusters, feature_profiles, kplets[:10000])
 
     # get_popular_profiles(heavy_kplets, 1000)

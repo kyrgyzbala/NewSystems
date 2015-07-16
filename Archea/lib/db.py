@@ -94,7 +94,7 @@ def store_kplets(kplets, fname):
         file_id = get_file_id(fname)
         insert_pentaplet_file(kplet_id, file_id)
 
-def get_heavy_archaea_kplets():
+def get_archaea_kplets():
 
     sql_cmd= """select apc.*, s1.cnt, s1.wgt
                 from (
