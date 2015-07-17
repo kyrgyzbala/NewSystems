@@ -42,13 +42,13 @@ def cluster_neighborhoods(n_clusters, feature_profiles, conserved_profiles):
 
     estimator_file = os.path.join(gv.project_data_path, 'Archea/clustering/models_predictions/', 'clustering_estimator_%d.p' % n_clusters)
     predictions_file = os.path.join(gv.project_data_path, 'Archea/clustering/models_predictions/', 'clustering_predictions_%d.p' % n_clusters)
-    data_matrix_file = 'files/data_matrix.p'
+    # data_matrix_file = 'files/data_matrix.p'
 
     print "Clustering finished. Writing the results to files:"
     print "     ", estimator_file
     print "     ", predictions_file
-    # pickle.dump(estimator, open(estimator_file, 'w'))
-    # pickle.dump(predictions, open(predictions_file, 'w'))
+    pickle.dump(estimator, open(estimator_file, 'w'))
+    pickle.dump(predictions, open(predictions_file, 'w'))
     # pickle.dump(data_matrix, open(data_matrix_file, 'w'))
 
 
@@ -67,7 +67,7 @@ def clustering_postprocess(n_clusters, conserved_profiles):
         cluster_neighborhood_ids = []
 
         for nbr in cluster_mapped:
-            cluster_profiles = cluster_profiles | set(nbr[1])
+            cluster_profiles = cluster_profiles | set(nbr[1:6])
             cluster_neighborhood_ids.append(nbr[0])
         cluster_profiles = sorted(list(cluster_profiles))
         all_cluster_profiles.append(cluster_profiles)
@@ -91,7 +91,7 @@ def clustering_postprocess(n_clusters, conserved_profiles):
         f.write("Cluster no\tNeighborhood IDs\n")
         cnt = 1
         for cl in all_cluster_neighborhoods:
-            f.write(str(cnt) + "\t" + " ".join(cl)+"\n")
+            f.write(str(cnt) + "\t" + " ".join([str(i) for i in cl])+"\n")
             cnt += 1
 
     return all_cluster_profiles
@@ -138,6 +138,6 @@ if __name__ == '__main__':
 
     kplets = db.get_archaea_kplets()
     n_clusters = 10
-    cluster_neighborhoods(n_clusters, feature_profiles, kplets[:10000])
-
+    # cluster_neighborhoods(n_clusters, feature_profiles, kplets[:10000])
+    clustering_postprocess(n_clusters, kplets)
     # get_popular_profiles(heavy_kplets, 1000)
