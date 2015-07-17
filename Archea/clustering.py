@@ -22,7 +22,7 @@ import lib.classes as cl
 from operator import itemgetter
 import matplotlib.pyplot as plt
 
-def cluster_neighborhoods(n_clusters, feature_profiles, conserved_profiles):
+def cluster_neighborhoods(n_clusters, feature_profiles, conserved_profiles, n_jobs=None):
     print "Generating data matrix for clustering"
 
     feature_size = len(feature_profiles)
@@ -33,7 +33,8 @@ def cluster_neighborhoods(n_clusters, feature_profiles, conserved_profiles):
             if feature_profiles[j] in conserved_profiles[i][1:6]:
                 data_matrix[i, j] = 1
     data_matrix *= 100
-    n_jobs = n_clusters/10
+    if not n_jobs:
+        n_jobs = n_clusters/10
     estimator = KMeans(n_clusters=n_clusters, n_jobs=n_jobs)
     print "Starting clustering job(s):"
     print "Input data:", data_matrix.shape
@@ -138,6 +139,7 @@ if __name__ == '__main__':
 
     kplets = db.get_archaea_kplets()
     n_clusters = 10
-    # cluster_neighborhoods(n_clusters, feature_profiles, kplets[:10000])
+    n_jobs=5
+    cluster_neighborhoods(n_clusters, feature_profiles, kplets[:500000])
     clustering_postprocess(n_clusters, kplets)
     # get_popular_profiles(heavy_kplets, 1000)
