@@ -5,7 +5,6 @@ if sys.platform=='darwin':
     sys.path.append('/Users/hudaiber/Projects/lib/BioPy/')
 elif sys.platform=='linux2':
     sys.path.append('/home/hudaiber/Projects/lib/BioPy/')
-from BioClasses import Gene
 import dm_tools as t
 
 class ProfileCount(object):
@@ -27,7 +26,7 @@ class Neighborhood(object):
         last = self.genes[-1].gid
         upstream, downstream = [], []
 
-        pty_genes = t.get_pty_file(pty_path)
+        pty_genes = t.get_pty_file(pty_file=pty_path, annotation_map=cdd_map)
         pty_genes.sort()
 
         for i in range(len(pty_genes)):

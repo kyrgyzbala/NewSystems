@@ -36,6 +36,11 @@ def map_genome2weight():
     return {l.split()[0]: float(l.split()[1]) for l in open(os.path.join(gv.data_path, 'CDD', 'Prok1402_ad.weight.tab')).readlines()}
 
 
+
+def map_gid2arcog():
+    return {l.split(',')[0]: l.split(',')[6] for l in open(os.path.join(gv.data_path, 'Archea/arCOG/ar14.arCOG.csv')).readlines() if 'arCOG' in l}
+
+
 def map_gid2src(map_file):
     out_map = {}
     with open(map_file) as f:
@@ -46,6 +51,20 @@ def map_gid2src(map_file):
             for gid in gids.strip().split():
                 out_map[gid] = src
     return out_map
+
+
+def map_gid2cdd():
+    cdd_map = {}
+    for l in open(os.path.join(gv.data_path, 'CDD', 'all_Prok1402.ccp.csv')):
+        terms = l.split(',')
+        gid = terms[0]
+        profile = terms[6]
+        if gid in cdd_map:
+            cdd_map[gid] += " %s"%profile
+        else:
+            cdd_map[gid] = profile
+
+    return cdd_map
 
 
 def union(a, b):
@@ -81,4 +100,16 @@ def get_weighted_profiles_from_neighborhoods(neighborhoods_path, exclude_target=
     profile_weights = sorted(profile_weights, key=itemgetter(1), reverse=True)
 
     return profile_weights
+
+
+def load_neighborhoods(path, target_files=None):
+
+    if not target_files:
+        files = [os.path.join(path, f) for f in os.listdir(path)]
+    else:
+        files= [os.path.join(path, f) for f in target_files]
+
+    return [cl.Neighborhood(f) for f in files]
+
+
 

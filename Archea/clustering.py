@@ -1,3 +1,6 @@
+ #!/usr/bin/python
+ # -*- coding: utf-8 -*-
+
 __author__ = 'hudaiber'
 
 
@@ -139,7 +142,6 @@ if __name__ == '__main__':
 
     kplets = db.get_archaea_kplets()
     n_clusters = 10
-    n_jobs=5
+    n_jobs = 5
     cluster_neighborhoods(n_clusters, feature_profiles, kplets[:500000])
     clustering_postprocess(n_clusters, kplets)
-    # get_popular_profiles(heavy_kplets, 1000)

@@ -118,7 +118,7 @@ def generate_reports_for_experiment(n_clusters, root_path, reports_path, summary
         write_to_xls(xls_file, cl_neighborhoods, cl_community, target_profiles, profile2def, src2org, gid2cdd)
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
 
     neighborhoods_path_root = '/Users/hudaiber/Projects/NewSystems/data/Bacteria/test/clustering/10/'
     reports_path = '/Users/hudaiber/Projects/NewSystems/data/Bacteria/test/reports'

@@ -3,7 +3,7 @@ __author__ = 'hudaiber'
 import sys
 import xlsxwriter as x
 from lib import tools as t
-import pickle
+from lib import db
 
 if sys.platform=='darwin':
     sys.path.append('/Users/hudaiber/Projects/lib/BioPy/')
@@ -15,15 +15,18 @@ import global_variables as gv
 import os
 
 
-def write_to_xls(xls_file, clustered_ids, community, target_profiles, profile2def):
+def write_to_xls(xls_file, clustered_ids, community, target_profiles, profile2def, src2org, gid2cdd):
 
-    neighborhoods =
+    neighborhood_files = db.archea_ids2files(clustered_ids)
+    neighborhood_files = [n[0] for n in neighborhood_files]
+
+    neighborhoods = t.load_neighborhoods(os.path.join(gv.project_data_path,'Archea/genes_and_flanks/win_10/pty/'), neighborhood_files)
 
     workbook = x.Workbook(xls_file)
     worksheet = workbook.add_worksheet()
 
-    row_len = 5
-    column_names = ['From', 'To', 'Strand', 'CDD', 'Definition']
+    row_len = 6
+    column_names = ['GI', 'From', 'To', 'Strand', 'CDD', 'Definition']
 
     title_format = workbook.add_format()
     title_format.set_font_size(14)
@@ -48,13 +51,14 @@ def write_to_xls(xls_file, clustered_ids, community, target_profiles, profile2de
     worksheet.merge_range(0, 0, 0, 10, 'Community: ' + ' '.join(community), title_format)
     top_border += 1
     tmp_cnt = 1
-    for nbr in nbrhds:
+    for nbr in neighborhoods:
         tmp_cnt += 1
         cur_top_border = top_border
 
         source = nbr.genes[0].src
         if not nbr.flank_extension:
-            nbr.extend_flanks(10, gv.pty_data_path, gv.ptt_data_path)
+            nbr.extend_flanks(10, os.path.join(gv.pty_data_path, src2org[source],"%s.pty"%source), gid2cdd)
+
         orgs = set(g.organism for g in nbr.genes)
         if 'genomes' in orgs:
             orgs.remove('genomes')
@@ -71,7 +75,7 @@ def write_to_xls(xls_file, clustered_ids, community, target_profiles, profile2de
             data_format = None
             if cur_cogid in target_profiles:
                 data_format = target_format
-            elif cur_cogid in cluster_profiles:
+            elif cur_cogid in community:
                 data_format = comm_format
 
             if cur_cogid in ["", "-", None]:
@@ -91,12 +95,12 @@ def write_to_xls(xls_file, clustered_ids, community, target_profiles, profile2de
                         if c in target_profiles:
                             data_format = target_format
 
-            data_raw = [gene.pFrom, gene.pTo, gene.strand, gene.cogid, cur_def]
+            data_raw = [gene.gid, gene.pFrom, gene.pTo, gene.strand, gene.cogid, cur_def]
             worksheet.write_row(cur_top_border, left_border, data_raw, data_format)
             worksheet.write_row(cur_top_border, left_border+row_len, [" "])
             cur_top_border += 1
 
-        left_border += row_len +1
+        left_border += row_len + 1
 
     workbook.close()
 
@@ -107,11 +111,20 @@ def generate_reports_for_experiment(n_clusters, neighborhoods=None, clustered_kp
         target_profiles = t.target_profiles()
     if not profile2def:
         profile2def = t.map_profile2def()
+    src2org = t.map_src2org()
+    gid2cdd = t.map_gid2cdd()
+    gid2arcog = t.map_gid2arcog()
+
+    for k ,v in gid2cdd.items():
+        if k not in gid2arcog:
+            gid2arcog[k] = v
 
     if not clustered_kplets:
-        clustered_kplets_file = os.path.join(gv.project_data_path, 'clustering/%d/clustered_neighborhoods.txt' % n_clusters)
-        clustered_kplet_ids = [l.strip().split() for l in open(clustered_kplets_file).readlines()]
-        clustered_profiles = os.path.join(gv.project_data_path, 'clustering/%d/clustered_profiles.txt' % n_clusters)
+        clustered_kplets_file = os.path.join(gv.project_data_path, 'Archea/clustering/%d/clustered_neighborhoods.txt' % n_clusters)
+        clustered_kplet_ids = [l.strip().split('\t')[1].split() for l in open(clustered_kplets_file).readlines()[1:]]
+
+        clustered_profiles_file = os.path.join(gv.project_data_path, 'Archea/clustering/%d/clustered_profiles.txt' % n_clusters)
+        clustered_profiles = [l.strip().split('\t')[1].split() for l in open(clustered_profiles_file).readlines()[1:]]
 
     reports_file_dir = os.path.join('reports', str(n_clusters))
     if not os.path.exists(reports_file_dir):
@@ -122,8 +135,8 @@ def generate_reports_for_experiment(n_clusters, neighborhoods=None, clustered_kp
     for i in range(n_clusters):
         print 'Cluster no:', i
         xls_file_name = os.path.join(reports_file_dir, "cl_no_%d.xls" % i)
-        write_to_xls(xls_file_name, clustered_kplet_ids[i], clustered_profiles[i], target_profiles, profile2def)
-
+        write_to_xls(xls_file_name, clustered_kplet_ids[i], clustered_profiles[i], target_profiles, profile2def, src2org, gid2arcog)
+        sys.exit()
 
 if __name__=='__main__':
 
