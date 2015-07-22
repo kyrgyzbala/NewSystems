@@ -19,11 +19,12 @@ import os
 
 def write_to_xls(xls_file, clustered_ids, community, target_profiles, profile2def, src2org, gid2cdd):
 
-    neighborhood_files = db.archea_ids2files(clustered_ids)
+    neighborhood_files = db.archea_kplet_ids2files(clustered_ids)
     neighborhood_files = [n[0] for n in neighborhood_files]
 
     neighborhoods = t.load_neighborhoods(os.path.join(gv.project_data_path,'Archea/genes_and_flanks/win_10/pty/'), neighborhood_files)
-    t.
+
+    org2src, src2files = db.archea_files2src_org_map(neighborhood_files)
 
     workbook = x.Workbook(xls_file)
     worksheet = workbook.add_worksheet()
@@ -101,9 +102,7 @@ def write_to_xls(xls_file, clustered_ids, community, target_profiles, profile2de
             worksheet.write_row(cur_top_border, left_border, data_raw, data_format)
             worksheet.write_row(cur_top_border, left_border+row_len, [" "])
             cur_top_border += 1
-
         left_border += row_len + 1
-
     workbook.close()
 
 

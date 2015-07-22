@@ -126,21 +126,36 @@ def archea_kplet_ids2files(id_list):
     return _cursor.fetchall()
 
 
-def archea_files2src_org_map(gids):
+def archea_files2src_org_map(files):
 
     _sql_cmd = """select awf.name, s.name, g.name
                   from archea_win10_files awf
                   inner join sources s on awf.source_id=s.id
                   inner join genomes g on s.genome_id = g.id
-                  where awf.name in (%s)"""
+                  where awf.name in ('%s')"""
+
+    _sql_cmd = _sql_cmd % "','".join(files)
+
     _cursor = setup_cursor()
-    _files = ["%d_annot.pty" % g for g in gids]
-    _cursor.execute(_sql_cmd % ",".join(_files))
+    _cursor.execute(_sql_cmd)
+    _org2src = {}
+    _src2files = {}
 
     for row in _cursor.fetchall():
-        parts = row[0].split()
-        print parts
-        sys.exit()
+        parts = row
+        [_file, _src, _org] = parts
+        if _org in _org2src:
+            _org2src[_org].update([_src])
+        else:
+            _org2src[_org] = set([_src])
+
+        if _src in _src2files:
+            _src2files[_src].update([_file])
+        else:
+            _src2files[_src] = set([_file])
+
+    return _org2src, _src2files
+
 
 if __name__ == '__main__':
 
