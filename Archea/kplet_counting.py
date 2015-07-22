@@ -9,7 +9,6 @@ elif sys.platform=='linux2':
     sys.path.append('/home/hudaiber/Projects/SystemFiles/')
 
 import global_variables as gv
-import pickle
 from lib import classes as cl
 from lib import tools as t
 from lib import db
@@ -174,7 +173,7 @@ def write_kmers_to_database(combination_size, neighborhoods_path):
         if not f.endswith('_annot.pty'):
             continue
         cnt += 1
-        if cnt<2322:
+        if cnt < 2322:
             continue
 
         kplets = extract_kplets(os.path.join(neighborhoods_path, f), combination_size)
@@ -193,4 +192,3 @@ if __name__=='__main__':
     neighborhoods_path = os.path.join(gv.project_data_path, 'Archea', 'genes_and_flanks', 'win_10', 'pty')
     count_profiles_in_neighborhoods(neighborhoods_path, './', 500, 10)
     # write_kmers_to_database(combination_size, neighborhoods_path)
-

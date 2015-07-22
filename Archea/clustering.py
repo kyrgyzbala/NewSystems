@@ -19,13 +19,13 @@ import numpy as np
 from sklearn.cluster import KMeans
 import pickle
 from lib import db
-from lib import tools as t
+ from lib import tools as t
 import lib.classes as cl
 
 from operator import itemgetter
-import matplotlib.pyplot as plt
 
-def cluster_neighborhoods(n_clusters, feature_profiles, conserved_profiles, n_jobs=None):
+
+ def cluster_neighborhoods(n_clusters, feature_profiles, conserved_profiles, n_jobs=None):
     print "Generating data matrix for clustering"
 
     feature_size = len(feature_profiles)

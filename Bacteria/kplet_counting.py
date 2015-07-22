@@ -120,7 +120,7 @@ def count_profiles_in_neighborhoods(neighborhoods_path, save_path, limit_to, com
 
 def extract_kplets(file, combination_size):
 
-    annotations = [l.strip().split('\t')[5] for l in open(file).readlines() if len(l.split('\t'))>5]
+    annotations = [l.strip().split('\t')[5] for l in open(file).readlines() if len(l.split('\t')) > 5]
     annotations = [l.split() for l in annotations]
 
     singles = [a for l in annotations if len(l)==1 for a in l]

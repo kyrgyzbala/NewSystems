@@ -9,8 +9,9 @@ elif sys.platform == 'linux2':
     sys.path.append('/home/hudaiber/Projects/SystemFiles/')
 import global_variables as gv
 import os
-import classes as cl
+from lib import classes as cl
 from operator import itemgetter
+import db
 
 
 def target_profiles():
@@ -112,4 +113,9 @@ def load_neighborhoods(path, target_files=None):
     return [cl.Neighborhood(f) for f in files]
 
 
+if __name__=='__main__':
 
+    source_path = '/Users/hudaiber/Projects/NewSystems/data/Archea/genes_and_flanks/win_10/pty/'
+    target_file = 'src_to_gids.txt'
+
+    build_src2gids_map(source_path, target_file)

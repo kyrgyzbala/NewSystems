@@ -1,9 +1,8 @@
 __author__ = 'Sanjarbek Hudaiberdiev'
 
-import sys
 import MySQLdb as mdb
 connection = mdb.connect(host='mysql-dev', user='hudaiber', db='PatternQuest', passwd='buP!est9')
-
+import sys
 
 def setup_cursor():
     try:
@@ -114,7 +113,7 @@ def get_archaea_kplets():
     return cursor.fetchall()
 
 
-def archea_ids2files(id_list):
+def archea_kplet_ids2files(id_list):
 
     _sql_cmd = """select distinct awf.name
                   from archea_5plets ap
@@ -126,6 +125,22 @@ def archea_ids2files(id_list):
     _cursor.execute(_sql_cmd % " , ".join(id_list))
     return _cursor.fetchall()
 
+
+def archea_files2src_org_map(gids):
+
+    _sql_cmd = """select awf.name, s.name, g.name
+                  from archea_win10_files awf
+                  inner join sources s on awf.source_id=s.id
+                  inner join genomes g on s.genome_id = g.id
+                  where awf.name in (%s)"""
+    _cursor = setup_cursor()
+    _files = ["%d_annot.pty" % g for g in gids]
+    _cursor.execute(_sql_cmd % ",".join(_files))
+
+    for row in _cursor.fetchall():
+        parts = row[0].split()
+        print parts
+        sys.exit()
 
 if __name__ == '__main__':
 

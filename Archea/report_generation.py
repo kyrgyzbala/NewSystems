@@ -1,7 +1,9 @@
 __author__ = 'hudaiber'
 
 import sys
+
 import xlsxwriter as x
+
 from lib import tools as t
 from lib import db
 
@@ -21,6 +23,7 @@ def write_to_xls(xls_file, clustered_ids, community, target_profiles, profile2de
     neighborhood_files = [n[0] for n in neighborhood_files]
 
     neighborhoods = t.load_neighborhoods(os.path.join(gv.project_data_path,'Archea/genes_and_flanks/win_10/pty/'), neighborhood_files)
+    t.
 
     workbook = x.Workbook(xls_file)
     worksheet = workbook.add_worksheet()
@@ -39,7 +42,6 @@ def write_to_xls(xls_file, clustered_ids, community, target_profiles, profile2de
     header_format.set_align('center')
 
     target_format = workbook.add_format()
-    # target_format.set_bg_color("red")
     target_format.set_font_color("red")
 
     comm_format = workbook.add_format()
@@ -82,7 +84,7 @@ def write_to_xls(xls_file, clustered_ids, community, target_profiles, profile2de
                 cur_def = ""
             else:
                 cur_cogid = cur_cogid.split()
-                if len(cur_cogid)>0:
+                if len(cur_cogid) > 0:
                     cur_def = []
                     for k in cur_cogid:
                         if k in profile2def:
@@ -105,7 +107,7 @@ def write_to_xls(xls_file, clustered_ids, community, target_profiles, profile2de
     workbook.close()
 
 
-def generate_reports_for_experiment(n_clusters, neighborhoods=None, clustered_kplets=None, target_profiles=None, profile2def=None):
+def generate_reports_for_experiment(n_clusters, clustered_kplets=None, target_profiles=None, profile2def=None):
 
     if not target_profiles:
         target_profiles = t.target_profiles()
@@ -137,6 +139,7 @@ def generate_reports_for_experiment(n_clusters, neighborhoods=None, clustered_kp
         xls_file_name = os.path.join(reports_file_dir, "cl_no_%d.xls" % i)
         write_to_xls(xls_file_name, clustered_kplet_ids[i], clustered_profiles[i], target_profiles, profile2def, src2org, gid2arcog)
         sys.exit()
+
 
 if __name__=='__main__':
 
