@@ -141,7 +141,7 @@ if __name__ == '__main__':
     feature_profiles = [k[0] for k in neighborhood_profiles[:limit_to]]
 
     kplets = db.get_archaea_kplets()
-    n_clusters = 10
+    n_clusters = 100
     n_jobs = 5
     cluster_neighborhoods(n_clusters, feature_profiles, kplets[:500000])
     clustering_postprocess(n_clusters, kplets)

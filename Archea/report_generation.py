@@ -1,9 +1,7 @@
 __author__ = 'hudaiber'
 
 import sys
-
 import xlsxwriter as x
-
 from lib import tools as t
 from lib import db
 
@@ -22,9 +20,48 @@ def write_to_xls(xls_file, clustered_ids, community, target_profiles, profile2de
     neighborhood_files = db.archea_kplet_ids2files(clustered_ids)
     neighborhood_files = [n[0] for n in neighborhood_files]
 
-    neighborhoods = t.load_neighborhoods(os.path.join(gv.project_data_path,'Archea/genes_and_flanks/win_10/pty/'), neighborhood_files)
+    neighborhood_files_path = os.path.join(gv.project_data_path,'Archea/genes_and_flanks/win_10/pty/')
+
+    # new_neighborhoods = []
+    #
+    # for n in neighborhoods:
+    #     if not new_neighborhoods:
+    #         cur_n = n
+    #         new_neighborhoods.append(n)
+    #         continue
+    #
+    #     common_gids = set(g.gid for g in n.genes).intersection(g.gid for g in cur_n.genes)
+    #
+    #     # Very arbitrary criteria to check if multiple files span the same neighborhood.
+    #     if len(common_gids)/float(len(n.genes)) > 0.6:
+    #         continue
+    #
+    #     cur_n = n
+    #     new_neighborhoods.append(n)
+
+    # neighborhoods = new_neighborhoods
 
     org2src, src2files = db.archea_files2src_org_map(neighborhood_files)
+
+    for src, files in src2files.items():
+        neighborhoods = t.load_neighborhoods(neighborhood_files_path, files)
+        new_neighborhoods = []
+        for n in neighborhoods:
+            if not new_neighborhoods:
+                cur_n = n
+                new_neighborhoods.append(n)
+                continue
+
+            common_gids = set(g.gid for g in n.genes).intersection(g.gid for g in cur_n.genes)
+
+            # Very arbitrary criteria to check if multiple files span the same neighborhood.
+            if len(common_gids)/float(len(n.genes)) > 0.6:
+                continue
+
+            cur_n = n
+            new_neighborhoods.append(n)
+
+
 
     workbook = x.Workbook(xls_file)
     worksheet = workbook.add_worksheet()
@@ -116,7 +153,7 @@ def generate_reports_for_experiment(n_clusters, clustered_kplets=None, target_pr
     gid2cdd = t.map_gid2cdd()
     gid2arcog = t.map_gid2arcog()
 
-    for k ,v in gid2cdd.items():
+    for k, v in gid2cdd.items():
         if k not in gid2arcog:
             gid2arcog[k] = v
 
@@ -137,11 +174,10 @@ def generate_reports_for_experiment(n_clusters, clustered_kplets=None, target_pr
         print 'Cluster no:', i
         xls_file_name = os.path.join(reports_file_dir, "cl_no_%d.xls" % i)
         write_to_xls(xls_file_name, clustered_kplet_ids[i], clustered_profiles[i], target_profiles, profile2def, src2org, gid2arcog)
-        sys.exit()
 
 
 if __name__=='__main__':
 
-    n_clusters = 10
+    n_clusters = 100
 
-    generate_reports_for_experiment(n_clusters)
+    # generate_reports_for_experiment(n_clusters)
