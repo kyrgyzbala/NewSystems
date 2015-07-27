@@ -123,7 +123,7 @@ def archea_kplet_ids2files(id_list):
 
     _cursor = setup_cursor()
     _cursor.execute(_sql_cmd % " , ".join(id_list))
-    return _cursor.fetchall()
+    return [l[0] for l in _cursor.fetchall()]
 
 
 def archea_files2src_org_map(files):

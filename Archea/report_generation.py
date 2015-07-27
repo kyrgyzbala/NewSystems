@@ -18,7 +18,6 @@ import os
 def write_to_xls(xls_file, clustered_ids, community, target_profiles, profile2def, src2org, gid2cdd):
 
     neighborhood_files = db.archea_kplet_ids2files(clustered_ids)
-    neighborhood_files = [n[0] for n in neighborhood_files]
 
     neighborhood_files_path = os.path.join(gv.project_data_path,'Archea/genes_and_flanks/win_10/pty/')
 
@@ -38,7 +37,6 @@ def write_to_xls(xls_file, clustered_ids, community, target_profiles, profile2de
     #
     #     cur_n = n
     #     new_neighborhoods.append(n)
-
     # neighborhoods = new_neighborhoods
 
     org2src, src2files = db.archea_files2src_org_map(neighborhood_files)
@@ -53,15 +51,13 @@ def write_to_xls(xls_file, clustered_ids, community, target_profiles, profile2de
                 continue
 
             common_gids = set(g.gid for g in n.genes).intersection(g.gid for g in cur_n.genes)
-
+            
             # Very arbitrary criteria to check if multiple files span the same neighborhood.
             if len(common_gids)/float(len(n.genes)) > 0.6:
                 continue
 
             cur_n = n
             new_neighborhoods.append(n)
-
-
 
     workbook = x.Workbook(xls_file)
     worksheet = workbook.add_worksheet()
@@ -97,14 +93,14 @@ def write_to_xls(xls_file, clustered_ids, community, target_profiles, profile2de
 
         source = nbr.genes[0].src
         if not nbr.flank_extension:
-            nbr.extend_flanks(10, os.path.join(gv.pty_data_path, src2org[source],"%s.pty"%source), gid2cdd)
+            nbr.extend_flanks(10, os.path.join(gv.pty_data_path, src2org[source], "%s.pty" % source), gid2cdd)
 
         orgs = set(g.organism for g in nbr.genes)
         if 'genomes' in orgs:
             orgs.remove('genomes')
         organism = orgs.pop()
 
-        worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1, "%s %s"%(organism, source), header_format)
+        worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1, "%s %s" % (organism, source), header_format)
         cur_top_border += 1
         worksheet.write_row(cur_top_border, left_border, column_names, header_format)
 
@@ -143,6 +139,113 @@ def write_to_xls(xls_file, clustered_ids, community, target_profiles, profile2de
     workbook.close()
 
 
+def write_to_xls_2(xls_file, clustered_ids, community, target_profiles, profile2def, src2org, gid2cdd):
+
+    neighborhood_files = db.archea_kplet_ids2files(clustered_ids)
+
+    neighborhood_files_path = os.path.join(gv.project_data_path,'Archea/genes_and_flanks/win_10/pty/')
+
+    org2src, src2files = db.archea_files2src_org_map(neighborhood_files)
+
+    for src, files in src2files.items():
+        neighborhoods = t.load_neighborhoods(neighborhood_files_path, files)
+        new_neighborhoods = []
+        for n in neighborhoods:
+            if not new_neighborhoods:
+                cur_n = n
+                new_neighborhoods.append(n)
+                continue
+
+            common_gids = set(g.gid for g in n.genes).intersection(g.gid for g in cur_n.genes)
+
+            # Very arbitrary criteria to check if multiple files span the same neighborhood.
+            if len(common_gids)/float(len(n.genes)) > 0.6:
+                continue
+
+            cur_n = n
+            new_neighborhoods.append(n)
+        src2files[src] = new_neighborhoods
+        #From now and on, src2files is src2neighborhoods
+
+    workbook = x.Workbook(xls_file)
+    worksheet = workbook.add_worksheet()
+
+    row_len = 6
+    column_names = ['GI', 'From', 'To', 'Strand', 'CDD', 'Definition']
+
+    title_format = workbook.add_format()
+    title_format.set_font_size(14)
+    title_format.set_bold()
+    title_format.set_align('center')
+
+    header_format = workbook.add_format()
+    header_format.set_font_size(12)
+    header_format.set_bold()
+    header_format.set_align('center')
+
+    target_format = workbook.add_format()
+    target_format.set_font_color("red")
+
+    comm_format = workbook.add_format()
+    comm_format.set_font_color("green")
+
+    top_border = 0
+    left_border = 0
+
+    worksheet.merge_range(0, 0, 0, 10, 'Community: ' + ' '.join(community), title_format)
+    top_border += 1
+
+    for org, srcs in org2src.items():
+
+        for src in srcs:
+            neighborhoods = src2files[src]
+
+            for nbr in neighborhoods:
+
+                cur_top_border = top_border
+
+                if not nbr.flank_extension:
+                    nbr.extend_flanks(10, os.path.join(gv.pty_data_path, src2org[src], "%s.pty" % src), gid2cdd)
+
+                worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1, "%s %s" % (org, src), header_format)
+                cur_top_border += 1
+                worksheet.write_row(cur_top_border, left_border, column_names, header_format)
+
+                cur_top_border += 2
+
+                for gene in nbr.genes:
+                    cur_cogid = gene.cogid
+                    data_format = None
+                    if cur_cogid in target_profiles:
+                        data_format = target_format
+                    elif cur_cogid in community:
+                        data_format = comm_format
+
+                    if cur_cogid in ["", "-", None]:
+                        cur_def = ""
+                    else:
+                        cur_cogid = cur_cogid.split()
+                        if len(cur_cogid) > 0:
+                            cur_def = []
+                            for k in cur_cogid:
+                                if k in profile2def:
+                                    cur_def.append(profile2def[k])
+                                else:
+                                    cur_def.append("")
+                            cur_def = " | ".join(cur_def)
+
+                            for c in cur_cogid:
+                                if c in target_profiles:
+                                    data_format = target_format
+
+                    data_raw = [gene.gid, gene.pFrom, gene.pTo, gene.strand, gene.cogid, cur_def]
+                    worksheet.write_row(cur_top_border, left_border, data_raw, data_format)
+                    worksheet.write_row(cur_top_border, left_border+row_len, [" "])
+                    cur_top_border += 1
+                left_border += row_len + 1
+    workbook.close()
+
+
 def generate_reports_for_experiment(n_clusters, clustered_kplets=None, target_profiles=None, profile2def=None):
 
     if not target_profiles:
@@ -173,11 +276,12 @@ def generate_reports_for_experiment(n_clusters, clustered_kplets=None, target_pr
     for i in range(n_clusters):
         print 'Cluster no:', i
         xls_file_name = os.path.join(reports_file_dir, "cl_no_%d.xls" % i)
-        write_to_xls(xls_file_name, clustered_kplet_ids[i], clustered_profiles[i], target_profiles, profile2def, src2org, gid2arcog)
+        write_to_xls_2(xls_file_name, clustered_kplet_ids[i], clustered_profiles[i], target_profiles, profile2def, src2org, gid2arcog)
+        sys.exit()
 
 
 if __name__=='__main__':
 
     n_clusters = 100
 
-    # generate_reports_for_experiment(n_clusters)
+    generate_reports_for_experiment(n_clusters)
