@@ -11,7 +11,7 @@ import global_variables as gv
 import os
 from lib import classes as cl
 from operator import itemgetter
-import db
+import archea_db as adb
 
 
 def target_profiles():
@@ -35,7 +35,6 @@ def map_profile2def():
 
 def map_genome2weight():
     return {l.split()[0]: float(l.split()[1]) for l in open(os.path.join(gv.data_path, 'CDD', 'Prok1402_ad.weight.tab')).readlines()}
-
 
 
 def map_gid2arcog():

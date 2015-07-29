@@ -159,6 +159,33 @@ def archea_files2src_org_map(files):
 
 def get_multiple_kplets():
 
+    _sql_cmd = """select  ap.id, count(*) cnt, group_concat(convert(apw.file_id, char(15))) as file_ids
+                  from archea_5plets ap
+                  inner join archea_5plets_win10 apw on ap.id = apw.kplet_id
+                  group by ap.id
+                  having count(*)>1
+                  order by cnt desc"""
+
+    _cursor = setup_cursor()
+    _cursor.execute(_sql_cmd)
+
+    return _cursor.fetchall()
+
+
+def map_file_id2name():
+
+    _sql_cmd = """select id, name from archea_win10_files"""
+    _cursor = setup_cursor()
+    _cursor.execute(_sql_cmd)
+
+    return { str(l[0]): l[1] for l in _cursor.fetchall()}
+
+
+def get_code_kplet(kplet_id):
+    _sql_cmd = """select kplet_1, kplet_2, kplet_3, kplet_4, kplet_5 from archea_5plets_codes where id = %s"""%kplet_id
+    _cursor = setup_cursor()
+    _cursor.execute(_sql_cmd)
+    return _cursor.fetchall()[0]
 
 
 if __name__ == '__main__':
