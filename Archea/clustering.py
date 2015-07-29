@@ -10,8 +10,6 @@ if sys.platform=='darwin':
 elif sys.platform=='linux2':
     sys.path.append('/home/hudaiber/Projects/SystemFiles/')
 
-reload(sys)
-sys.setdefaultencoding("utf-8")
 
 import global_variables as gv
 import os
@@ -19,7 +17,7 @@ import numpy as np
 from sklearn.cluster import KMeans
 import pickle
 from lib import db
- from lib import tools as t
+from lib import tools as t
 import lib.classes as cl
 
 from operator import itemgetter

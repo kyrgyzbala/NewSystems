@@ -2,7 +2,6 @@ __author__ = 'Sanjarbek Hudaiberdiev'
 
 import MySQLdb as mdb
 connection = mdb.connect(host='mysql-dev', user='hudaiber', db='PatternQuest', passwd='buP!est9')
-import sys
 
 def setup_cursor():
     try:
@@ -44,6 +43,7 @@ def retrieve_pentaplet_id(profiles):
     if rows:
         return rows[0][0]
     return None
+
 
 def insert_pentaplet(profiles):
     profile2id = map_profile2id(profiles)
@@ -155,6 +155,10 @@ def archea_files2src_org_map(files):
             _src2files[_src] = set([_file])
 
     return _org2src, _src2files
+
+
+def get_multiple_kplets():
+
 
 
 if __name__ == '__main__':

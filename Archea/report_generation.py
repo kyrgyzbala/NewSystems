@@ -277,7 +277,6 @@ def generate_reports_for_experiment(n_clusters, clustered_kplets=None, target_pr
         print 'Cluster no:', i
         xls_file_name = os.path.join(reports_file_dir, "cl_no_%d.xls" % i)
         write_to_xls_2(xls_file_name, clustered_kplet_ids[i], clustered_profiles[i], target_profiles, profile2def, src2org, gid2arcog)
-        sys.exit()
 
 
 if __name__=='__main__':
