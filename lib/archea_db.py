@@ -178,7 +178,16 @@ def map_file_id2name():
     _cursor = setup_cursor()
     _cursor.execute(_sql_cmd)
 
-    return { str(l[0]): l[1] for l in _cursor.fetchall()}
+    return {str(l[0]): l[1] for l in _cursor.fetchall()}
+
+
+def map_name2file_id():
+
+    _sql_cmd = """select name, id from archea_win10_files"""
+    _cursor = setup_cursor()
+    _cursor.execute(_sql_cmd)
+
+    return {str(l[0]): l[1] for l in _cursor.fetchall()}
 
 
 def get_code_kplet(kplet_id):

@@ -36,9 +36,12 @@ if __name__=='__main__':
     # p.dump(kplets, open('multiple_kplets.p', 'w'))
 
     file_id2name = adb.map_file_id2name()
+    name2file_id = adb.map_name2file_id()
     kplets = p.load(open('multiple_kplets.p'))
 
     cnt = 0
+    duplicate_ids = []
+    print 'Total kplets:', len(kplets)
     for kplet in kplets:
 
         kplet_id = kplet[0]
@@ -60,10 +63,23 @@ if __name__=='__main__':
             tmp_gids = kplet_gids(nbr, kplet_codes)
             if tmp_gids == cur_gids:
                 files_to_remove.append(nbr.source_file)
+            else:
+                cur_gids = tmp_gids
 
+        if files_to_remove:
+            files_to_remove = [l.split('/')[-1] for l in files_to_remove]
+            file_ids_to_remove = [name2file_id[name] for name in files_to_remove]
 
+            duplicate_ids += [(kplet_id, file_id) for file_id in file_ids_to_remove]
 
+        cnt += 1
+        if cnt % 1000 == 0:
+            print cnt
 
+    fout = open('archea_remove_script.sql','w')
 
-
-
+    fout.write("delete from archea_7plets_win10 where (kplet_id, file_id) in (\n")
+    for comb in duplicate_ids:
+        fout.write("(%s, %s),\n"%comb)
+    fout.write(");")
+    fout.close()
