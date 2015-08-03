@@ -91,10 +91,12 @@ def get_weighted_profiles_from_neighborhoods(neighborhoods_path, exclude_target=
                 if exclude_target and tmpCog in _target_profiles:
                     continue
                 if tmpCog in profile_stats:
-                    profile_stats[tmpCog].weight += org_weight
-                    profile_stats[tmpCog].count += 1
+                    if g.gid not in profile_stats[tmpCog].gids:
+                        profile_stats[tmpCog].weight += org_weight
+                        profile_stats[tmpCog].count += 1
+                        profile_stats[tmpCog].gids += [g.gid]
                 else:
-                    profile_stats[tmpCog] = cl.ProfileCount(1, org_weight)
+                    profile_stats[tmpCog] = cl.ProfileCount(1, org_weight, g.gid)
 
     profile_weights = [(k, v.weight) for k, v in profile_stats.items()]
     profile_weights = sorted(profile_weights, key=itemgetter(1), reverse=True)

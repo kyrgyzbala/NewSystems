@@ -9,9 +9,10 @@ from BioClasses import Gene
 import dm_tools as t
 
 class ProfileCount(object):
-    def __init__(self, count, weight):
+    def __init__(self, count, weight, gid):
         self.count = count
         self.weight = weight
+        self.gids = [gid]
 
 
 class Neighborhood(object):

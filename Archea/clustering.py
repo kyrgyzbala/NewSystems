@@ -16,14 +16,13 @@ import os
 import numpy as np
 from sklearn.cluster import KMeans
 import pickle
-from lib import db
+from lib import archea_db as adb
 from lib import tools as t
 import lib.classes as cl
 
 from operator import itemgetter
 
-
- def cluster_neighborhoods(n_clusters, feature_profiles, conserved_profiles, n_jobs=None):
+def cluster_neighborhoods(n_clusters, feature_profiles, conserved_profiles, n_jobs=None):
     print "Generating data matrix for clustering"
 
     feature_size = len(feature_profiles)
@@ -133,12 +132,13 @@ if __name__ == '__main__':
     # cluster_profiles = clustering_postprocess(n_clusters, conserved_profiles)
 
     neighborhoods_path = os.path.join(gv.project_data_path, 'Archea', 'genes_and_flanks', 'win_10', 'pty')
-
+    print 'starting weighted profile'
     neighborhood_profiles = t.get_weighted_profiles_from_neighborhoods(neighborhoods_path, exclude_target=False)
     limit_to = 1000
     feature_profiles = [k[0] for k in neighborhood_profiles[:limit_to]]
+    print 'starting kplets retrieval.'
+    kplets = adb.get_archaea_kplets()
 
-    kplets = db.get_archaea_kplets()
     n_clusters = 100
     n_jobs = 5
     cluster_neighborhoods(n_clusters, feature_profiles, kplets[:500000])
