@@ -11,7 +11,7 @@ import os
 import numpy as np
 from sklearn.cluster import KMeans
 import pickle
-import lib.classes as cl
+import lib_old.classes as cl
 
 
 def cluster_neighborhoods(n_clusters, feature_profiles, conserved_profiles):

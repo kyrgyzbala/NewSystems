@@ -16,8 +16,8 @@ import os
 import numpy as np
 from sklearn.cluster import KMeans
 import pickle
-from lib import archea_db as adb
-from lib import tools as t
+ from lib.db.archea import archea_db as adb
+ from lib import tools as t
 import lib.classes as cl
 
 from operator import itemgetter

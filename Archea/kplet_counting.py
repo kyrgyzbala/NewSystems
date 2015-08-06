@@ -11,7 +11,9 @@ elif sys.platform=='linux2':
 import global_variables as gv
 from lib import classes as cl
 from lib import tools as t
-from lib import db
+from lib.db.archea import quadruplets as q
+from lib.db.archea import triplets as tr
+from lib.db.archea import duplets as d
 from itertools import combinations
 from itertools import product
 import numpy as np
@@ -173,11 +175,16 @@ def write_kmers_to_database(combination_size, neighborhoods_path):
         if not f.endswith('_annot.pty'):
             continue
         cnt += 1
-        if cnt < 2322:
-            continue
 
         kplets = extract_kplets(os.path.join(neighborhoods_path, f), combination_size)
-        db.store_kplets(kplets, f)
+
+        if combination_size == 4:
+            q.store_kplets(kplets, f)
+        elif combination_size == 3:
+            tr.store_kplets(kplets, f)
+        elif combination_size == 2:
+            d.store_kplets(kplets, f)
+
         total += len(kplets)
         if len(kplets) == 0:
             zeros += 1
@@ -187,8 +194,10 @@ def write_kmers_to_database(combination_size, neighborhoods_path):
 
 if __name__=='__main__':
 
-    combination_size = 5
-
     neighborhoods_path = os.path.join(gv.project_data_path, 'Archea', 'genes_and_flanks', 'win_10', 'pty')
-    count_profiles_in_neighborhoods(neighborhoods_path, './', 500, 10)
+    # count_profiles_in_neighborhoods(neighborhoods_path, './', 500, 10)
+
+    combination_size = 2
+    write_kmers_to_database(combination_size, neighborhoods_path)
+    # combination_size = 3
     # write_kmers_to_database(combination_size, neighborhoods_path)

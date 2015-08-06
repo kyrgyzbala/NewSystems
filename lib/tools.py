@@ -11,7 +11,6 @@ import global_variables as gv
 import os
 from lib import classes as cl
 from operator import itemgetter
-import archea_db as adb
 
 
 def target_profiles():

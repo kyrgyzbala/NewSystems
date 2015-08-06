@@ -10,8 +10,8 @@ elif sys.platform=='linux2':
 
 import global_variables as gv
 import pickle
-from lib import classes as cl
-from lib import tools as t
+from lib_old import classes as cl
+from lib_old import tools as t
 # from lib import db
 from itertools import combinations
 from itertools import product

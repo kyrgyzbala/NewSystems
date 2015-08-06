@@ -8,11 +8,12 @@ elif sys.platform=='linux2':
 
 import os
 import global_variables as gv
+sys.path.append('../')
 from lib import tools
-from lib.db.archea import db_tools
-from lib.db.archea import duplets as db
+from lib.db.bacteria import db_tools
+from lib.db.bacteria import pentaplets as db
 import pickle as p
-
+import time
 
 def kplet_gids(neighborhood, kplet_codes):
 
@@ -27,13 +28,15 @@ def kplet_gids(neighborhood, kplet_codes):
 
 
 if __name__=='__main__':
-
-    files_path = os.path.join(gv.project_data_path, 'Archea/genes_and_flanks/win_10/pty/')
+    tic = time.time()
+    print 'reading neighborhoods'
+    files_path = os.path.join(gv.project_data_path, 'Bacteria/genes_and_flanks/win_10/raw_nbr_files/')
     neighborhoods = tools.load_neighborhoods(files_path)
 
+    print 'loading kplets'
     kplets = db.get_multiple_kplets()
     # p.dump(kplets, open('multiple_kplets.p', 'w'))
-
+    print 'loading file maps'
     file_id2name = db_tools.map_file_id2name()
     name2file_id = db_tools.map_name2file_id()
     # kplets = p.load(open('multiple_kplets.p'))
@@ -46,6 +49,7 @@ if __name__=='__main__':
 
         kplet_id = kplet[0]
         kplet_file_ids = kplet[2].split(',')
+
         kplet_file_names = [file_id2name[id] for id in kplet_file_ids]
         kplet_file_names.sort()
 
@@ -82,9 +86,9 @@ if __name__=='__main__':
         if cnt % 1000 == 0:
             print cnt
 
-    fout = open('archea_remove_duplicate_2plets_script.sql', 'w')
+    fout = open('bacteria_remove_duplicate_5plets_script.sql', 'w')
 
-    fout.write("delete from archea_2plets_win10 where (kplet_id, file_id) in (\n")
+    fout.write("delete from bacteria_5plets_win10 where (kplet_id, file_id) in (\n")
     for comb in duplicate_ids:
         fout.write("(%s, %s),\n" % comb)
     fout.write(");")
