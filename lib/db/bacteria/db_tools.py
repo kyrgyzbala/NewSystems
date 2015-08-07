@@ -1,24 +1,7 @@
 __author__ = 'Sanjarbek Hudaiberdiev'
 
-import MySQLdb as mdb
-connection = mdb.connect(host='mysql-dev', user='hudaiber', db='PatternQuest', passwd='buP!est9')
+from lib.db import DbClass
 
-def setup_cursor():
-    try:
-        cursor = connection.cursor()
-        return cursor
-    except ConnectionDoesNotExist:
-        print "Database not configured"
-        return None
-
-
-def file_name2id():
-    _cursor = setup_cursor()
-    _sqlcmd = """ select id, name
-                  from  archea_win10_files"""
-
-    _cursor.execute(_sqlcmd)
-    print {v: int(k) for k, v in _cursor.fetchall()}
 
 
 def map_profile2id(profile_list):
@@ -110,14 +93,13 @@ def map_file_id2name():
 
     return {str(l[0]): l[1] for l in _cursor.fetchall()}
 
+def map_file_name2id():
 
-def map_name2file_id():
+    _db = DbClass()
 
-    _sql_cmd = """select name, id from bacteria_win10_files"""
-    _cursor = setup_cursor()
-    _cursor.execute(_sql_cmd)
-
-    return {str(l[0]): l[1] for l in _cursor.fetchall()}
+    _db.cmd = """ select name, id from  bacteria_win10_files"""
+    rows = _db.retrieve()
+    return {v: int(k) for (k, v) in rows}
 
 
 

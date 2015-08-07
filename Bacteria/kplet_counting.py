@@ -13,12 +13,15 @@ import global_variables as gv
 import pickle
 from lib import classes as cl
 from lib import tools as t
-from lib.db.archea import db_tools
+import lib.db
+from lib.db.bacteria import db_tools
 from itertools import combinations
 from itertools import product
 import numpy as np
 import pandas as pd
 from operator import itemgetter
+import time
+
 
 
 def flatten(input_list):
@@ -161,29 +164,95 @@ def extract_kplets(file, combination_size):
         return list(combinations(singles, combination_size))
 
 
-def write_kmers_to_database(combination_size, neighborhoods_path):
+def write_kmers_to_database(combination_size):
     cnt = 0
     total = 0
     zeros = 0
 
     for f in os.listdir(neighborhoods_path):
+
         cnt += 1
+        if cnt <= 5595:
+            continue
 
+        tic = time.time()
         kplets = extract_kplets(os.path.join(neighborhoods_path, f), combination_size)
+        extract_time = time.time() - tic
 
+        if not kplets:
+            continue
+
+        tic = time.time()
         db.store_kplets(kplets, f)
+        insert_time = time.time() - tic
+
         total += len(kplets)
         if len(kplets) == 0:
             zeros += 1
-        print cnt, f, len(kplets)
+
+        print cnt, f, len(kplets), extract_time, insert_time, insert_time/len(kplets)
 
     print 'Nbrhds:', cnt, 'total combinations', total, 'zeros', zeros
+
+
+def write_kmers_to_database2(combination_size):
+    cnt = 0
+    total = 0
+    zeros = 0
+
+    local_cnt = 0
+
+    kplet_pile = []
+    extract_start = time.time()
+
+    profile2id = lib.db.map_cdd2id()
+    file2id = db_tools.map_file_name2id()
+
+    for f in os.listdir(neighborhoods_path):
+
+        cnt += 1
+
+        if cnt < 5627:
+            continue
+
+        kplets = extract_kplets(os.path.join(neighborhoods_path, f), combination_size)
+
+        if not kplets:
+            zeros += 1
+            continue
+
+        local_cnt += len(kplets)
+
+        kplet_pile += [(kplets, f)]
+
+        if local_cnt > 50000:
+
+            insert_start = time.time()
+            print 'starting insert. No of kplets: ',local_cnt
+            db.store_kplets_pile(kplet_pile)
+
+            insert_time = time.time() - insert_start
+            extract_time = extract_start - time.time()
+            print 'File count:', cnt, 'Block size:', local_cnt, 'Extract time:', extract_time, extract_time/local_cnt, \
+                  'Insert time:', insert_time, insert_time/local_cnt
+
+            kplet_pile = []
+            local_cnt = 0
+            extract_start = time.time()
+
+        total += len(kplets)
+
+
+
+    print 'Nbrhds:', cnt, 'total combinations', total, 'zeros', zeros
+
 
 
 if __name__=='__main__':
 
     combination_size = 4
     from lib.db.bacteria import quadruplets as db
-    neighborhoods_path = os.path.join(gv.project_data_path, 'Bacteria', 'genes_and_flanks', 'win_10', 'raw_nbr_files')
-    write_kmers_to_database(combination_size, neighborhoods_path)
 
+    neighborhoods_path = os.path.join(gv.project_data_path, 'Bacteria', 'genes_and_flanks', 'win_10', 'raw_nbr_files')
+
+    write_kmers_to_database2(combination_size)

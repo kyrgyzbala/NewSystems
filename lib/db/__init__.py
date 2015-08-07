@@ -32,3 +32,13 @@ class DbClass(object):
 
         self.execute()
         return self.cursor.fetchall()
+
+
+def map_cdd2id():
+
+    _db = DbClass
+    _db.cmd = """select code, id from cdd_profiles"""
+
+    rows = _db.retrieve()
+
+    return {row[0]: int(row[1]) for row in rows}
