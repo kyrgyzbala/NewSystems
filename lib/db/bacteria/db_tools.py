@@ -44,7 +44,7 @@ def get_file_id(fname):
     return rows[0][0]
 
 
-def archea_files2src_org_map(files):
+def bacteria_org2src_src2files_map(files):
 
     _sql_cmd = """select awf.name, s.name, g.name
                   from bacteria_win10_files awf
@@ -73,6 +73,33 @@ def archea_files2src_org_map(files):
             _src2files[_src] = set([_file])
 
     return _org2src, _src2files
+
+
+
+def bacteria_file2src_src2org_map(files):
+
+    _sql_cmd = """select awf.name, s.name, g.name
+                  from bacteria_win10_files awf
+                  inner join sources s on awf.source_id=s.id
+                  inner join genomes g on s.genome_id = g.id
+                  where awf.name in ('%s')"""
+
+    _sql_cmd = _sql_cmd % "','".join(files)
+
+    _cursor = setup_cursor()
+    _cursor.execute(_sql_cmd)
+    _src2org = {}
+    _file2src = {}
+
+    for row in _cursor.fetchall():
+        parts = row
+        [_file, _src, _org] = parts
+        _src2org[_src] = _org
+        _file2src[_file] = _src
+
+    return _file2src, _src2org
+
+
 
 
 def map_file_id2name():

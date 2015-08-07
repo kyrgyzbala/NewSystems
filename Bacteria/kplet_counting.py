@@ -7,12 +7,13 @@ if sys.platform=='darwin':
     sys.path.append('/Users/hudaiber/Projects/SystemFiles/')
 elif sys.platform=='linux2':
     sys.path.append('/home/hudaiber/Projects/SystemFiles/')
+sys.path.append('../')
 
 import global_variables as gv
 import pickle
-from lib_old import classes as cl
-from lib_old import tools as t
-from lib_old import db
+from lib import classes as cl
+from lib import tools as t
+from lib.db.archea import db_tools
 from itertools import combinations
 from itertools import product
 import numpy as np
@@ -128,7 +129,7 @@ def extract_kplets(file, combination_size):
 
     multiples = [l for l in annotations if len(l) > 1]
 
-    if len(multiples)>0 and combination_size > len(multiples):
+    if 0 < len(multiples) < combination_size:
         tmp_comb_size = combination_size - len(multiples)
         single_combinations = combinations(singles, tmp_comb_size)
 
@@ -166,34 +167,23 @@ def write_kmers_to_database(combination_size, neighborhoods_path):
     zeros = 0
 
     for f in os.listdir(neighborhoods_path):
-        if not f.endswith('_annot.pty'):
-            continue
         cnt += 1
-        if cnt<10553:
-            continue
-        gid = f.split('_')[0]
 
         kplets = extract_kplets(os.path.join(neighborhoods_path, f), combination_size)
+
         db.store_kplets(kplets, f)
         total += len(kplets)
         if len(kplets) == 0:
             zeros += 1
         print cnt, f, len(kplets)
+
     print 'Nbrhds:', cnt, 'total combinations', total, 'zeros', zeros
 
 
 if __name__=='__main__':
 
-    # limit_to  = int(sys.argv[1])
-    # combination_size = int(sys.argv[2])
-    #
-    combination_size = 5
-
-    # file = '/Users/hudaiber/Projects/NewSystems/data/Archea/genes_and_flanks/win_10/pty/294494794_annot.pty'
-    # print len(count_kplets(file, combination_size))
-
-    # count_profiles_in_neighborhoods(neighborhoods_path, limit_to, combination_size)
+    combination_size = 4
+    from lib.db.bacteria import quadruplets as db
     neighborhoods_path = os.path.join(gv.project_data_path, 'Bacteria', 'genes_and_flanks', 'win_10', 'raw_nbr_files')
     write_kmers_to_database(combination_size, neighborhoods_path)
-    # combination_size = 6
-    # write_kmers_to_database(combination_size, neighborhoods_path)
+

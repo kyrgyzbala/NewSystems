@@ -1,17 +1,7 @@
 __author__ = 'Sanjarbek Hudaiberdiev'
 
 import sys
-import MySQLdb as mdb
-connection = mdb.connect(host='mysql-dev', user='hudaiber', db='PatternQuest', passwd='buP!est9')
 
-
-def setup_cursor():
-    try:
-        cursor = connection.cursor()
-        return cursor
-    except ConnectionDoesNotExist:
-        print "Database not configured"
-        return None
 
 
 def file_name2id():
@@ -93,6 +83,7 @@ def insert_pentaplet_file(kplet_id, file_id):
 
 
 def store_kplets(kplets, fname):
+
     sql_fmt = """"""
 
     for kplet in kplets:

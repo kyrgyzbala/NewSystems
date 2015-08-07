@@ -17,6 +17,10 @@ def target_profiles():
     profiles_file = os.path.join(gv.project_data_path, 'Archea/arCOG/selected_arcogs.txt')
     return [l.strip() for l in open(profiles_file).readlines()]
 
+def bacteria_target_profiles():
+    profiles_file = os.path.join(gv.project_data_path, 'Bacteria/CDD/profile_ids.txt')
+    return [l.strip() for l in open(profiles_file).readlines()]
+
 
 def map_src2org():
     return {l.split()[1]:l.split()[0] for l in open(os.path.join(gv.data_path, 'info', 'map_gnm_src.txt')).readlines()}
@@ -31,13 +35,14 @@ def map_profile2def():
     def_map["-"] = " "
     return def_map
 
+def map_cdd_profile2def():
+    def_map = {l.split('\t')[1]: l.split('\t')[3] for l in open(os.path.join(gv.data_path, 'CDD/cdfind_pub_ad.dat')).readlines()}
+    def_map["-"] = " "
+    return def_map
+
 
 def map_genome2weight():
     return {l.split()[0]: float(l.split()[1]) for l in open(os.path.join(gv.data_path, 'CDD', 'Prok1402_ad.weight.tab')).readlines()}
-
-
-def map_gid2arcog():
-    return {l.split(',')[0]: l.split(',')[6] for l in open(os.path.join(gv.data_path, 'Archea/arCOG/ar14.arCOG.csv')).readlines() if 'arCOG' in l}
 
 
 def map_gid2src(map_file):
@@ -64,6 +69,17 @@ def map_gid2cdd():
             cdd_map[gid] = profile
 
     return cdd_map
+
+
+def map_gid2arcog():
+    return {l.split(',')[0]: l.split(',')[6] for l in open(os.path.join(gv.data_path, 'Archea/arCOG/ar14.arCOG.csv')).readlines() if 'arCOG' in l}
+
+
+def map_gid2arcog_cdd():
+    _gid2arcog = map_gid2arcog()
+    _gid2cdd = map_gid2cdd()
+
+    return dict(_gid2cdd.items() + _gid2arcog.items())
 
 
 def union(a, b):

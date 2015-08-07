@@ -19,6 +19,8 @@ class Neighborhood(object):
     def __init__(self, source_file):
         self.source_file = source_file
         self.genes = t.get_pty_file(source_file)
+        for gene in self.genes:
+            gene.tag = 'neighborhood'
         self.flank_extension = None
 
     def extend_flanks(self, flank_size, pty_path, cdd_map=None):
@@ -36,6 +38,11 @@ class Neighborhood(object):
             if pty_genes[i].gid == last:
                 downstream = pty_genes[i+1:i+flank_size]
                 break
+
+        for gene in upstream:
+            gene.tag = 'flank'
+        for gene in downstream:
+            gene.tag = 'flank'
 
         self.genes = upstream + self.genes + downstream
 

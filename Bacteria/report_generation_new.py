@@ -2,8 +2,7 @@ __author__ = 'hudaiber'
 
 import sys
 import xlsxwriter as x
-from lib.db.archea import pentaplets as db_p
-from lib.db.archea import db_tools
+from lib.db.bacteria import db_tools
 from lib import tools as t
 
 if sys.platform=='darwin':
@@ -16,13 +15,14 @@ import global_variables as gv
 import os
 
 
-target_profiles = t.target_profiles()
-profile2def = t.map_profile2def()
+target_profiles = t.bacteria_target_profiles()
+profile2def = t.map_cdd_profile2def()
 # src2org = t.map_src2org()
-gid2arcog_cdd = t.map_gid2arcog_cdd()
+# gid2arcog_cdd = t.map_gid2arcog_cdd()
 # gid2arcog = t.map_gid2arcog()
+gid2cdd = t.map_gid2cdd()
 
-neighborhood_files_path = os.path.join(gv.project_data_path, 'Archea/genes_and_flanks/win_10/pty/')
+neighborhood_files_path = os.path.join(gv.project_data_path, 'Bacteria/genes_and_flanks/win_10/raw_nbr_files/')
 
 
 def write_to_xls_2(xls_file, kplet):
@@ -33,7 +33,7 @@ def write_to_xls_2(xls_file, kplet):
     kplet_files = kplet[4]
     kplet_files = kplet_files.split(',')
 
-    _org2src, _src2files = db_tools.archea_org2src_src2files_map(kplet_files)
+    _org2src, _src2files = db_tools.bacteria_org2src_src2files_map(kplet_files)
 
     workbook = x.Workbook(xls_file)
     worksheet = workbook.add_worksheet()
@@ -82,7 +82,7 @@ def write_to_xls_2(xls_file, kplet):
                 cur_top_border = top_border
 
                 if not nbr.flank_extension:
-                    nbr.extend_flanks(10, os.path.join(gv.pty_data_path, org, "%s.pty" % src), gid2arcog_cdd)
+                    nbr.extend_flanks(10, os.path.join(gv.pty_data_path, org, "%s.pty" % src), gid2cdd)
 
                 worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1, "%s %s" % (org, src), header_format)
                 cur_top_border += 1
@@ -129,55 +129,16 @@ def write_to_xls_2(xls_file, kplet):
 
 if __name__=='__main__':
 
-
-    # print 'Pentaplets'
-    # kplets = db_p.get_report_kplets()
-    # reports_file_dir = os.path.join('reports', '5')
-    #
-    # cnt = 0
-    # for kplet in kplets:
-    #
-    #     xls_file_name = os.path.join(reports_file_dir, "%d.xls" % (cnt+1))
-    #     write_to_xls_2(xls_file_name, kplet)
-    #     print xls_file_name
-    #     cnt += 1
-    #
-    #
-    # print 'quadruplets'
-    # from lib.db.archea import quadruplets as db
-    # kplets = db.get_report_kplets()
-    # reports_file_dir = os.path.join('reports', '4')
-    #
-    # cnt = 0
-    # for kplet in kplets:
-    #
-    #     xls_file_name = os.path.join(reports_file_dir, "%d.xls" % (cnt+1))
-    #     write_to_xls_2(xls_file_name, kplet)
-    #     # print xls_file_name
-    #     cnt += 1
-    #
-    # print 'triplets'
-    # from lib.db.archea import triplets as db
-    # kplets = db.get_report_kplets()
-    # reports_file_dir = os.path.join('reports', '3')
-    #
-    # cnt = 0
-    # for kplet in kplets:
-    #
-    #     xls_file_name = os.path.join(reports_file_dir, "%d.xls" % (cnt+1))
-    #     write_to_xls_2(xls_file_name, kplet)
-    #     # print xls_file_name
-    #     cnt += 1
-
-    print 'duplets'
-    from lib.db.archea import duplets as db
+    print 'Pentaplets'
+    from lib.db.bacteria import pentaplets as db
     kplets = db.get_report_kplets()
-    reports_file_dir = os.path.join('reports', '2')
+    reports_file_dir = os.path.join('reports', '5')
 
     cnt = 0
     for kplet in kplets:
 
         xls_file_name = os.path.join(reports_file_dir, "%d.xls" % (cnt+1))
         write_to_xls_2(xls_file_name, kplet)
-        # print xls_file_name
+        print xls_file_name
         cnt += 1
+        sys.exit()

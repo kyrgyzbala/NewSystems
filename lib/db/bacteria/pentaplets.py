@@ -120,3 +120,37 @@ def get_code_kplet(kplet_id):
 #
 #     cursor = setup_cursor()
 #     cursor.execute(sql_cmd)
+
+def get_report_kplets():
+
+    cursor = setup_cursor()
+    sql_cmd = """SET group_concat_max_len=15000"""
+    cursor.execute(sql_cmd)
+
+    sql_cmd = """select apc.*, s1.cnt, s1.wgt, s1.an
+                from (
+                        select ap.id ,count(*) as cnt, sum(w.weight) as wgt, group_concat(awf.name) as an
+                        from bacteria_5plets ap
+                        inner join bacteria_5plets_win10 apw on ap.id = apw.kplet_id
+                        inner join bacteria_win10_files awf on apw.file_id = awf.id
+                        inner join sources s on awf.source_id=s.id
+                        inner join weights w on w.genome_id=s.genome_id
+                        group by ap.id
+                        having count(distinct s.genome_id)>1 ) s1
+                inner join bacteria_5plets_codes apc on s1.id=apc.id
+                order by s1.wgt desc
+                limit 0,300"""
+
+    cursor.execute(sql_cmd)
+
+    out_list = []
+
+    for row in cursor.fetchall():
+        id = row[0]
+        kplet_codes = (row[1:6])
+        count = row[6]
+        weight = row[7]
+        files = row[8]
+        out_list.append([id, kplet_codes, count, weight, files])
+
+    return out_list

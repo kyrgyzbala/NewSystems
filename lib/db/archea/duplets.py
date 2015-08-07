@@ -88,3 +88,40 @@ def get_multiple_kplets():
     _cursor.execute(_sql_cmd)
 
     return _cursor.fetchall()
+
+
+def get_report_kplets(limit_to=300):
+
+    cursor = setup_cursor()
+
+    sql_cmd = """SET group_concat_max_len=15000"""
+    cursor.execute(sql_cmd)
+
+    sql_cmd = """select apc.*, s1.cnt, s1.wgt, s1.an
+                from (
+                        select ap.id ,count(*) as cnt, sum(w.weight) as wgt, group_concat(awf.name) as an
+                        from archea_2plets ap
+                        inner join archea_2plets_win10 apw on ap.id = apw.kplet_id
+                        inner join archea_win10_files awf on apw.file_id = awf.id
+                        inner join sources s on awf.source_id=s.id
+                        inner join weights w on w.genome_id=s.genome_id
+                        group by ap.id
+                        having count(distinct s.genome_id)>1 ) s1
+                inner join archea_2plets_codes apc on s1.id=apc.id
+                order by s1.wgt desc
+                limit 0,%d""" % limit_to
+
+
+    cursor.execute(sql_cmd)
+
+    out_list = []
+
+    for row in cursor.fetchall():
+        id = row[0]
+        kplet_codes = (row[1:3])
+        count = row[3]
+        weight = row[4]
+        files = row[5]
+        out_list.append([id, kplet_codes, count, weight, files])
+
+    return out_list
