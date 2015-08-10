@@ -21,24 +21,24 @@ import pandas as pd
 from operator import itemgetter
 
 
-def flatten(TheList):
-    listIsNested = True
+def flatten(the_list):
+    is_nested = True
 
-    while listIsNested:
-        keepChecking = False
-        Temp = []
+    while is_nested:
+        keep_checking = False
+        temp = []
 
-        for element in TheList:
-            if isinstance(element,list) or isinstance(element,tuple):
-                Temp.extend(element)
-                keepChecking = True
+        for element in the_list:
+            if isinstance(element, list) or isinstance(element, tuple):
+                temp.extend(element)
+                keep_checking = True
             else:
-                Temp.append(element)
+                temp.append(element)
 
-        listIsNested = keepChecking
-        TheList = Temp[:]
+        is_nested = keep_checking
+        the_list = temp[:]
 
-    return TheList
+    return the_list
 
 
 def count_combinations(neighborhoods, profile_list, r, src2org, gnm2weight):
@@ -119,7 +119,6 @@ def count_profiles_in_neighborhoods(neighborhoods_path, save_path, limit_to, com
     M = M.sort('weight',ascending=False)
     fname = '%d_%d.tab' % (limit_to, combination_size)
     fname = os.path.join(save_path, fname)
-    print fname
     fout = open(fname, 'w')
     M.to_csv(fout, sep="\t", index=False)
 
@@ -172,8 +171,7 @@ def write_kmers_to_database(combination_size, neighborhoods_path):
     zeros = 0
 
     for f in os.listdir(neighborhoods_path):
-        if not f.endswith('_annot.pty'):
-            continue
+
         cnt += 1
 
         kplets = extract_kplets(os.path.join(neighborhoods_path, f), combination_size)
@@ -190,6 +188,9 @@ def write_kmers_to_database(combination_size, neighborhoods_path):
             zeros += 1
         print cnt, f, len(kplets)
     print 'Nbrhds:', cnt, 'total combinations', total, 'zeros', zeros
+
+
+
 
 
 if __name__=='__main__':

@@ -36,9 +36,37 @@ class DbClass(object):
 
 def map_cdd2id():
 
-    _db = DbClass
+    _db = DbClass()
     _db.cmd = """select code, id from cdd_profiles"""
 
     rows = _db.retrieve()
 
     return {row[0]: int(row[1]) for row in rows}
+
+
+def map_id2cdd():
+    _db = DbClass()
+    _db.cmd = """select code, id from cdd_profiles"""
+
+    rows = _db.retrieve()
+
+    return {row[0]: int(row[1]) for row in rows}
+
+
+def map_id2cdd_cdd2id_cdd2def():
+    _db = DbClass()
+    _db.cmd = """select code, id, description from cdd_profiles"""
+
+    rows = _db.retrieve()
+
+    _cdd2id, _id2cdd, _cdd2def = {}, {}, {}
+
+    for row in rows:
+        (code, id, desctiption) = row
+
+        _cdd2id[code] = id
+        _id2cdd[id] = code
+        _cdd2def[code] = desctiption
+
+    return _id2cdd, _cdd2id, _cdd2def
+

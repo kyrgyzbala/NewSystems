@@ -99,7 +99,7 @@ def map_file_name2id():
 
     _db.cmd = """ select name, id from  bacteria_win10_files"""
     rows = _db.retrieve()
-    return {v: int(k) for (k, v) in rows}
+    return {row[0]: row[1] for row in rows}
 
 
 

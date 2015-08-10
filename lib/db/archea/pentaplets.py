@@ -121,7 +121,7 @@ def get_code_kplet(kplet_id):
     return _cursor.fetchall()[0]
 
 
-def get_report_kplets():
+def get_report_kplets(limit_to=300):
 
     sql_cmd = """select apc.*, s1.cnt, s1.wgt, s1.an
                 from (
@@ -135,7 +135,7 @@ def get_report_kplets():
                         having count(distinct s.genome_id)>1 ) s1
                 inner join archea_5plets_codes apc on s1.id=apc.id
                 order by s1.wgt desc
-                limit 0,300"""
+                limit 0,%d""" % limit_to
 
     cursor = setup_cursor()
     cursor.execute(sql_cmd)
