@@ -8,19 +8,18 @@ if sys.platform=='darwin':
 elif sys.platform=='linux2':
     sys.path.append('/home/hudaiber/Projects/SystemFiles/')
 
+
 import global_variables as gv
-from lib import classes as cl
 from lib import tools as t
 import lib.db
-from lib.db.archea import pentaplets as p
-from lib.db.archea import quadruplets as q
-from lib.db.archea import triplets as tr
-from lib.db.archea import duplets as d
-from lib.db.archea import db_tools
+from lib.db.bacteria import pentaplets as p
+from lib.db.bacteria import quadruplets as q
+from lib.db.bacteria import triplets as tr
+from lib.db.bacteria import duplets as d
 import report_generation as r
 from math import ceil
 
-neighborhood_path = os.path.join(gv.project_data_path, 'Archea/genes_and_flanks/win_10/pty/')
+neighborhood_path = os.path.join(gv.project_data_path, 'Bacteria/genes_and_flanks/win_10/raw_nbr_files/')
 
 
 def merge_similar_files(files):
@@ -65,14 +64,13 @@ def merge_similar_kplets(kplet_summaries):
 
         cur_merged_list = [i]
         merged_out[i] = 1
-
         pivot = set(kplet_summaries[i][1])
 
         for j in range(i, len(kplet_summaries)):
             if merged_out[j] == 1:
                 continue
 
-            if len(pivot.intersection(kplet_summaries[j][1])) >= len(pivot)/2:
+            if len(pivot.intersection(kplet_summaries[j][1])) > len(pivot)/2:
                 cur_merged_list.append(j)
                 merged_out[j] = 1
 
@@ -185,20 +183,32 @@ if __name__ == '__main__':
 
     # id2cdd, cdd2id, cdd2def = lib.db.map_id2cdd_cdd2id_cdd2def()
 
+    id2cdd = lib.db.map_id2cdd()
+
     print 'Generating summaries'
-    summarized_5plets = merge_similar_kplets(p.get_report_kplets(limit_to=500))
-    summarized_4plets = merge_similar_kplets(q.get_report_kplets(limit_to=500))
-    summarized_3plets = merge_similar_kplets(tr.get_report_kplets(limit_to=500))
-    summarized_2plets = merge_similar_kplets(d.get_report_kplets(limit_to=500))
+    summarized_5plets = merge_similar_kplets(p.get_report_kplets(id2cdd, limit_to=1000))
+    print '5plets completed'
+    summarized_4plets = merge_similar_kplets(q.get_report_kplets(id2cdd, limit_to=1000))
+    print '4plets completed'
+    summarized_3plets = merge_similar_kplets(tr.get_report_kplets(id2cdd, limit_to=1000))
+    print '3plets completed'
+    summarized_2plets = merge_similar_kplets(d.get_report_kplets(id2cdd, limit_to=1000))
+    print '2plets completed'
+    print
 
     print 'Merging summaries'
     summarized_3plets, summarized_2plets = merge_kplet_orders(summarized_3plets, summarized_2plets)
+    print '3 and 2 completed'
     summarized_4plets, summarized_3plets = merge_kplet_orders(summarized_4plets, summarized_3plets)
+    print '4 and 3 completed'
     summarized_5plets, summarized_4plets = merge_kplet_orders(summarized_5plets, summarized_4plets)
-    reports_file_dir = os.path.join('reports/merged_across_kplets')
+    print '5 and 4 completed'
+
+    reports_file_dir = os.path.join('reports/merged_across_kplets/top_1000/')
 
     print 'Reports'
     for i, summarized_kplets in zip([5, 4, 3, 2], [summarized_5plets, summarized_4plets, summarized_3plets, summarized_2plets]):
+        print 'Starting for', i
         for j, kplet in enumerate(summarized_kplets):
             xls_file_name = os.path.join(reports_file_dir, str(i),  "%d_%d.xls" % (j+1, i))
             kplet_codes = kplet[1]

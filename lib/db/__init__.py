@@ -46,11 +46,11 @@ def map_cdd2id():
 
 def map_id2cdd():
     _db = DbClass()
-    _db.cmd = """select code, id from cdd_profiles"""
+    _db.cmd = """select id, code from cdd_profiles"""
 
     rows = _db.retrieve()
 
-    return {row[0]: int(row[1]) for row in rows}
+    return {int(row[0]): row[1] for row in rows}
 
 
 def map_id2cdd_cdd2id_cdd2def():

@@ -1,17 +1,6 @@
 __author__ = 'Sanjarbek Hudaiberdiev'
 
-import MySQLdb as mdb
-connection = mdb.connect(host='mysql-dev', user='hudaiber', db='PatternQuest', passwd='buP!est9')
-import db_tools as t
-
-
-def setup_cursor():
-    try:
-        cursor = connection.cursor()
-        return cursor
-    except ConnectionDoesNotExist:
-        print "Database not configured"
-        return None
+from lib.db import DbClass
 
 
 def get_multiple_kplets():
@@ -32,31 +21,13 @@ def get_multiple_kplets():
     return _cursor.fetchall()
 
 
-# def get_bacteria_kplets():
-#
-#     sql_cmd = """select apc.*, s1.cnt, s1.wgt
-#                  from (
-#                         select ap.id ,count(*) as cnt, sum(w.weight) as wgt
-#                         from archea_5plets ap
-#                         inner join archea_5plets_win10 apw on ap.id = apw.kplet_id
-#                         inner join archea_win10_files awf on apw.file_id = awf.id
-#                         inner join sources s on awf.source_id=s.id
-#                         inner join weights w on w.genome_id=s.genome_id
-#                         group by ap.id ) s1
-#                  inner join archea_5plets_codes apc on s1.id=apc.id
-#                  order by s1.wgt desc"""
-#
-#     cursor = setup_cursor()
-#     cursor.execute(sql_cmd)
-#
-#     return cursor.fetchall()
-
-
 def get_code_kplet(kplet_id):
-    _sql_cmd = """select kplet_1, kplet_2, kplet_3, kplet_4, kplet_5 from bacteria_5plets_codes where id = %s""" % kplet_id
-    _cursor = setup_cursor()
-    _cursor.execute(_sql_cmd)
-    return _cursor.fetchall()[0]
+
+    _db = DbClass()
+
+    _db.cmd = """select kplet_1, kplet_2, kplet_3, kplet_4, kplet_5 from bacteria_5plets_codes where id = %s""" % kplet_id
+
+    return _db.retrieve()[0]
 
 
 # def store_kplets(kplets, fname):
@@ -121,36 +92,33 @@ def get_code_kplet(kplet_id):
 #     cursor = setup_cursor()
 #     cursor.execute(sql_cmd)
 
-def get_report_kplets():
 
-    cursor = setup_cursor()
-    sql_cmd = """SET group_concat_max_len=15000"""
-    cursor.execute(sql_cmd)
+def get_report_kplets(id2cdd, limit_to=500):
 
-    sql_cmd = """select apc.*, s1.cnt, s1.wgt, s1.an
-                from (
-                        select ap.id ,count(*) as cnt, sum(w.weight) as wgt, group_concat(awf.name) as an
-                        from bacteria_5plets ap
-                        inner join bacteria_5plets_win10 apw on ap.id = apw.kplet_id
-                        inner join bacteria_win10_files awf on apw.file_id = awf.id
-                        inner join sources s on awf.source_id=s.id
-                        inner join weights w on w.genome_id=s.genome_id
-                        group by ap.id
-                        having count(distinct s.genome_id)>1 ) s1
-                inner join bacteria_5plets_codes apc on s1.id=apc.id
-                order by s1.wgt desc
-                limit 0,300"""
+    _db = DbClass()
+    _db.cmd = """SET group_concat_max_len=1500000"""
+    _db.execute()
 
-    cursor.execute(sql_cmd)
+    _db.cmd = """select ap.* ,count(*) as cnt, sum(w.weight) as wgt, group_concat(awf.name) as an
+                from bacteria_5plets ap
+                inner join bacteria_5plets_win10 apw on ap.id = apw.kplet_id
+                inner join bacteria_win10_files awf on apw.file_id = awf.id
+                inner join sources s on awf.source_id=s.id
+                inner join weights w on w.genome_id=s.genome_id
+                group by ap.id
+                having count(distinct s.genome_id)>1
+                order by wgt desc
+                limit 0,%d""" % limit_to
 
     out_list = []
 
-    for row in cursor.fetchall():
+    for row in _db.retrieve():
         id = row[0]
-        kplet_codes = (row[1:6])
+        kplet_codes = [id2cdd[int(id)] for id in row[1:6]]
         count = row[6]
         weight = row[7]
         files = row[8]
         out_list.append([id, kplet_codes, count, weight, files])
 
     return out_list
+

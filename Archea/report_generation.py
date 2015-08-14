@@ -115,6 +115,8 @@ def write_to_xls(xls_file, kplet):
                             for c in cur_cogid:
                                 if c in target_profiles:
                                     data_format = target_format
+                                elif c in kplet_cdd_codes:
+                                    data_format = kplet_format
 
                     data_raw = [gene.gid, gene.pFrom, gene.pTo, gene.strand, gene.cogid, cur_def]
                     worksheet.write_row(cur_top_border, left_border, data_raw, data_format)

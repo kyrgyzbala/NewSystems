@@ -11,9 +11,9 @@ import global_variables as gv
 sys.path.append('../')
 from lib import tools
 from lib.db.bacteria import db_tools
-from lib.db.bacteria import pentaplets as db
-import pickle as p
+from lib.db.bacteria import duplets as db
 import time
+
 
 def kplet_gids(neighborhood, kplet_codes):
 
@@ -38,7 +38,7 @@ if __name__=='__main__':
     # p.dump(kplets, open('multiple_kplets.p', 'w'))
     print 'loading file maps'
     file_id2name = db_tools.map_file_id2name()
-    name2file_id = db_tools.map_name2file_id()
+    name2file_id = db_tools.map_file_name2id()
     # kplets = p.load(open('multiple_kplets.p'))
 
     cnt = 0
@@ -86,9 +86,9 @@ if __name__=='__main__':
         if cnt % 1000 == 0:
             print cnt
 
-    fout = open('bacteria_remove_duplicate_5plets_script.sql', 'w')
+    fout = open('bacteria_remove_duplicate_2plets_script.sql', 'w')
 
-    fout.write("delete from bacteria_5plets_win10 where (kplet_id, file_id) in (\n")
+    fout.write("delete from bacteria_2plets_win10 where (kplet_id, file_id) in (\n")
     for comb in duplicate_ids:
         fout.write("(%s, %s),\n" % comb)
     fout.write(");")

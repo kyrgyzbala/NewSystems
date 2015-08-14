@@ -29,20 +29,18 @@ def get_file_id(fname):
 
 def bacteria_org2src_src2files_map(files):
 
-    _sql_cmd = """select awf.name, s.name, g.name
+    _db = DbClass()
+
+    _db.cmd = """select awf.name, s.name, g.name
                   from bacteria_win10_files awf
                   inner join sources s on awf.source_id=s.id
                   inner join genomes g on s.genome_id = g.id
-                  where awf.name in ('%s')"""
+                  where awf.name in ('%s')""" % "','".join(files)
 
-    _sql_cmd = _sql_cmd % "','".join(files)
-
-    _cursor = setup_cursor()
-    _cursor.execute(_sql_cmd)
     _org2src = {}
     _src2files = {}
 
-    for row in _cursor.fetchall():
+    for row in _db.retrieve():
         parts = row
         [_file, _src, _org] = parts
         if _org in _org2src:
@@ -61,20 +59,17 @@ def bacteria_org2src_src2files_map(files):
 
 def bacteria_file2src_src2org_map(files):
 
-    _sql_cmd = """select awf.name, s.name, g.name
+    _db = DbClass()
+    _db.cmd = """select awf.name, s.name, g.name
                   from bacteria_win10_files awf
                   inner join sources s on awf.source_id=s.id
                   inner join genomes g on s.genome_id = g.id
-                  where awf.name in ('%s')"""
+                  where awf.name in ('%s')""" % "','".join(files)
 
-    _sql_cmd = _sql_cmd % "','".join(files)
-
-    _cursor = setup_cursor()
-    _cursor.execute(_sql_cmd)
     _src2org = {}
     _file2src = {}
 
-    for row in _cursor.fetchall():
+    for row in _db.retrieve():
         parts = row
         [_file, _src, _org] = parts
         _src2org[_src] = _org
@@ -84,19 +79,16 @@ def bacteria_file2src_src2org_map(files):
 
 
 
-
 def map_file_id2name():
 
-    _sql_cmd = """select id, name from bacteria_win10_files"""
-    _cursor = setup_cursor()
-    _cursor.execute(_sql_cmd)
+    _db = DbClass()
+    _db.cmd = """select id, name from bacteria_win10_files"""
+    return {str(l[0]): l[1] for l in _db.retrieve()}
 
-    return {str(l[0]): l[1] for l in _cursor.fetchall()}
 
 def map_file_name2id():
 
     _db = DbClass()
-
     _db.cmd = """ select name, id from  bacteria_win10_files"""
     rows = _db.retrieve()
     return {row[0]: row[1] for row in rows}
