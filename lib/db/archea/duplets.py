@@ -1,17 +1,9 @@
 __author__ = 'Sanjarbek Hudaiberdiev'
 
-import MySQLdb as mdb
-connection = mdb.connect(host='mysql-dev', user='hudaiber', db='PatternQuest', passwd='buP!est9')
+from lib.db import DbClass
 import db_tools as t
-
-
-def setup_cursor():
-    try:
-        cursor = connection.cursor()
-        return cursor
-    except ConnectionDoesNotExist:
-        print "Database not configured"
-        return None
+from lib.utils.classes import Kplet
+from lib.db.archea import neighborhoods_path
 
 
 def store_kplets(kplets, fname):
@@ -90,14 +82,14 @@ def get_multiple_kplets():
     return _cursor.fetchall()
 
 
-def get_report_kplets(limit_to=300):
+def get_report_kplets(limit_to=300, load_locations=None):
 
-    cursor = setup_cursor()
+    _db = DbClass()
 
-    sql_cmd = """SET group_concat_max_len=15000"""
-    cursor.execute(sql_cmd)
+    _db.cmd = """SET group_concat_max_len=15000"""
+    _db.execute()
 
-    sql_cmd = """select apc.*, s1.cnt, s1.wgt, s1.an
+    _db.cmd = """select apc.*, s1.cnt, s1.wgt, s1.an
                 from (
                         select ap.id ,count(*) as cnt, sum(w.weight) as wgt, group_concat(awf.name) as an
                         from archea_2plets ap
@@ -111,17 +103,19 @@ def get_report_kplets(limit_to=300):
                 order by s1.wgt desc
                 limit 0,%d""" % limit_to
 
-
-    cursor.execute(sql_cmd)
-
     out_list = []
 
-    for row in cursor.fetchall():
+    for row in _db.retrieve():
         id = row[0]
         kplet_codes = (row[1:3])
         count = row[3]
         weight = row[4]
-        files = row[5]
-        out_list.append([id, kplet_codes, count, weight, files])
+        files = row[5].split(',')
+        tmp_kplet = Kplet(id=id, codes=kplet_codes, weight=weight, count=count, files=files)
+        out_list.append(tmp_kplet)
+
+    _path = neighborhoods_path()
+    if load_locations:
+        [kplet.load_locations(_path) for kplet in out_list]
 
     return out_list

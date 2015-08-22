@@ -1,54 +1,49 @@
 __author__ = 'Sanjarbek Hudaiberdiev'
 
-import MySQLdb as mdb
-connection = mdb.connect(host='mysql-dev', user='hudaiber', db='PatternQuest', passwd='buP!est9')
+from lib.db import DbClass
+
 import db_tools as t
+from lib.utils.classes import Kplet
+from lib.db.archea import neighborhoods_path
 
 
-def setup_cursor():
-    try:
-        cursor = connection.cursor()
-        return cursor
-    except ConnectionDoesNotExist:
-        print "Database not configured"
-        return None
-
-
-def store_kplets(kplets, fname):
-
-    for kplet in kplets:
-        l = list(kplet)
-        l.sort()
-        kplet_id = get_kplet_id(l)
-
-        if not kplet_id:
-            insert_kplet(l)
-            kplet_id = get_kplet_id(l)
-        connection.commit()
-
-        file_id = t.get_file_id(fname)
-        insert_kplet_file(kplet_id, file_id)
+# def store_kplets(kplets, fname):
+#
+#     for kplet in kplets:
+#         l = list(kplet)
+#         l.sort()
+#         kplet_id = get_kplet_id(l)
+#
+#         if not kplet_id:
+#             insert_kplet(l)
+#             kplet_id = get_kplet_id(l)
+#         connection.commit()
+#
+#         file_id = t.get_file_id(fname)
+#         insert_kplet_file(kplet_id, file_id)
 
 
 
-def insert_kplet_file(kplet_id, file_id):
-    sql_cmd = """insert ignore into archea_4plets_win10 values (%d, %d)"""
-    sql_cmd = sql_cmd % (kplet_id, file_id)
-
-    cursor = setup_cursor()
-    cursor.execute(sql_cmd)
-    connection.commit()
+# def insert_kplet_file(kplet_id, file_id):
+#     sql_cmd = """insert ignore into archea_4plets_win10 values (%d, %d)"""
+#     sql_cmd = sql_cmd % (kplet_id, file_id)
+#
+#     cursor = setup_cursor()
+#     cursor.execute(sql_cmd)
+#     connection.commit()
 
 
 def get_kplet_id(profiles):
     profile2id = t.map_profile2id(profiles)
 
+    _db = DbClass()
+
     sql_cmd = """select id from archea_4plets where kplet_1=%d and kplet_2=%d and kplet_3=%d and kplet_4=%d"""
     sql_cmd = sql_cmd % (profile2id[profiles[0]], profile2id[profiles[1]], profile2id[profiles[2]], profile2id[profiles[3]])
 
-    cursor = setup_cursor()
-    cursor.execute(sql_cmd)
-    rows = cursor.fetchall()
+    _db.cmd = sql_cmd
+
+    rows = _db.retrieve()
 
     if rows:
         return rows[0][0]
@@ -58,11 +53,12 @@ def get_kplet_id(profiles):
 def insert_kplet(profiles):
     profile2id = t.map_profile2id(profiles)
 
+    _db = DbClass()
+
     sql_cmd = """insert into archea_4plets (kplet_1, kplet_2, kplet_3, kplet_4) values (%d, %d, %d, %d)"""
     sql_cmd = sql_cmd % (profile2id[profiles[0]], profile2id[profiles[1]], profile2id[profiles[2]], profile2id[profiles[3]])
-
-    cursor = setup_cursor()
-    cursor.execute(sql_cmd)
+    _db.cmd = sql_cmd
+    _db.execute()
 
 
 def get_multiple_kplets():
@@ -74,10 +70,11 @@ def get_multiple_kplets():
                   having count(*)>1
                   order by cnt desc"""
 
-    _cursor = setup_cursor()
-    _cursor.execute(_sql_cmd)
+    _db = DbClass
+    _db.cmd = _sql_cmd
 
-    return _cursor.fetchall()
+    return _db.retrieve()
+
 
 def get_code_kplet(kplet_id):
     _sql_cmd = """SELECT cp1.code, cp2.code, cp3.code, cp4.code
@@ -87,11 +84,12 @@ def get_code_kplet(kplet_id):
                     inner join cdd_profiles cp3 on cp3.id = ap.kplet_3
                     inner join cdd_profiles cp4 on cp4.id = ap.kplet_4
                     where ap.id = %d""" % kplet_id
-    _cursor = setup_cursor()
-    _cursor.execute(_sql_cmd)
-    return _cursor.fetchall()[0]
+    _db = DbClass()
+    _db.cmd = _sql_cmd
+    return _db.retrieve()
 
-def get_report_kplets(limit_to=300):
+
+def get_report_kplets(limit_to=300, load_locations=None):
 
     sql_cmd = """select apc.*, s1.cnt, s1.wgt, s1.an
                 from (
@@ -107,17 +105,22 @@ def get_report_kplets(limit_to=300):
                 order by s1.wgt desc
                 limit 0,%d""" % limit_to
 
-    cursor = setup_cursor()
-    cursor.execute(sql_cmd)
+    _db = DbClass()
+    _db.cmd = sql_cmd
 
     out_list = []
 
-    for row in cursor.fetchall():
+    for row in _db.retrieve():
         id = row[0]
         kplet_codes = (row[1:5])
         count = row[5]
         weight = row[6]
-        files = row[7]
-        out_list.append([id, kplet_codes, count, weight, files])
+        files = row[7].split(',')
+        tmp_kplet = Kplet(id=id, codes=kplet_codes, weight=weight, count=count, files=files)
+        out_list.append(tmp_kplet)
+
+    _path = neighborhoods_path()
+    if load_locations:
+        [kplet.load_locations(_path) for kplet in out_list]
 
     return out_list

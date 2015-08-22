@@ -1,10 +1,11 @@
 __author__ = 'hudaiber'
 
 import sys
+
 import xlsxwriter as x
-from lib.db.archea import pentaplets as db_p
+
 from lib.db.archea import db_tools
-from lib import tools as t
+from lib.utils import tools as t
 
 if sys.platform=='darwin':
     sys.path.append('/Users/hudaiber/Projects/lib/BioPy/')

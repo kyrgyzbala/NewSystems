@@ -5,7 +5,6 @@ if sys.platform=='darwin':
     sys.path.append('/Users/hudaiber/Projects/lib/BioPy/')
 elif sys.platform=='linux2':
     sys.path.append('/home/hudaiber/Projects/lib/BioPy/')
-from BioClasses import Gene
 import dm_tools as t
 
 class ProfileCount(object):
@@ -54,9 +53,25 @@ class Neighborhood(object):
         self.flank_extension = True
 
 
-class kplet(object):
-    def __init__(self, id, profiles, weight=None, files=None):
-        self.profiles = profiles
+class Kplet(object):
+
+    def __init__(self, id, codes, weight=None, count=None, files=None):
+        self.codes = codes
+        self.k = len(codes)
         self.id = id
         self.weight = weight
+        self.count = count
         self.files = files
+        self.locations = {f:[] for f in self.files}
+
+    def load_locations(self, neighborhoods_path):
+
+        for f in self.files:
+            genes = t.get_pty_file(neighborhoods_path+'/'+f)
+            gi_list = []
+            for gene in genes:
+                for cogid in gene.cogid.split():
+                    if cogid in self.codes:
+                        gi_list.append(gene.gid)
+                        break
+            self.locations[f] = gi_list

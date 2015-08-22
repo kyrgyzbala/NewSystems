@@ -6,7 +6,7 @@ sys.path.append('/Users/hudaiber/Projects/lib/BioPy/')
 import dm_tools
 sys.path.append('/Users/hudaiber/Projects/SystemFiles/')
 import global_variables as gv
-import lib.tools as t
+import lib.utils.tools as t
 import time
 import pickle
 

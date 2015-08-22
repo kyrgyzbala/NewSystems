@@ -9,7 +9,7 @@ elif sys.platform=='linux2':
 import os
 import global_variables as gv
 sys.path.append('../')
-from lib import tools
+from lib.utils import tools
 from lib.db.bacteria import db_tools
 from lib.db.bacteria import duplets as db
 import time

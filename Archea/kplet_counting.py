@@ -10,7 +10,7 @@ elif sys.platform=='linux2':
 
 import global_variables as gv
 from lib import classes as cl
-from lib import tools as t
+from lib.utils import tools as t
 from lib.db.archea import quadruplets as q
 from lib.db.archea import triplets as tr
 from lib.db.archea import duplets as d

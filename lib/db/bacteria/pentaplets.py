@@ -3,24 +3,6 @@ __author__ = 'Sanjarbek Hudaiberdiev'
 from lib.db import DbClass
 
 
-def get_multiple_kplets():
-
-    _cursor = setup_cursor()
-    _sql_cmd = """SET group_concat_max_len=15000"""
-    _cursor.execute(_sql_cmd)
-
-    _sql_cmd = """select  ap.id, count(*) cnt, group_concat(convert(apw.file_id, char(15))) as file_ids
-                  from bacteria_5plets ap
-                  inner join bacteria_5plets_win10 apw on ap.id = apw.kplet_id
-                  group by ap.id
-                  having count(*)>1
-                  order by cnt desc"""
-
-    _cursor.execute(_sql_cmd)
-
-    return _cursor.fetchall()
-
-
 def get_code_kplet(kplet_id):
 
     _db = DbClass()

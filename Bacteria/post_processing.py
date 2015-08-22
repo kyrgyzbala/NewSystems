@@ -10,7 +10,7 @@ elif sys.platform=='linux2':
 
 
 import global_variables as gv
-from lib import tools as t
+from lib.utils import tools as t
 import lib.db
 from lib.db.bacteria import pentaplets as p
 from lib.db.bacteria import quadruplets as q

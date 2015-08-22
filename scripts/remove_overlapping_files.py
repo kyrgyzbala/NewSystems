@@ -8,10 +8,9 @@ elif sys.platform=='linux2':
 
 import os
 import global_variables as gv
-from lib import tools
+from lib.utils import tools
 from lib.db.archea import db_tools
 from lib.db.archea import duplets as db
-import pickle as p
 
 
 def kplet_gids(neighborhood, kplet_codes):

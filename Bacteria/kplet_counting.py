@@ -10,9 +10,8 @@ elif sys.platform=='linux2':
 sys.path.append('../')
 
 import global_variables as gv
-import pickle
 from lib import classes as cl
-from lib import tools as t
+from lib.utils import tools as t
 import lib.db
 from lib.db.bacteria import db_tools
 from itertools import combinations

@@ -1,9 +1,12 @@
 __author__ = 'hudaiber'
 
-import xlsxwriter as x
-from lib import tools as t
 import pickle
 import sys
+
+import xlsxwriter as x
+
+from lib.utils import tools as t
+
 if sys.platform=='darwin':
     sys.path.append('/Users/hudaiber/Projects/lib/BioPy/')
     sys.path.append('/Users/hudaiber/Projects/SystemFiles/')
@@ -19,9 +22,8 @@ neighborhood_files_path = os.path.join(gv.project_data_path, 'Bacteria/genes_and
 
 target_profiles = t.bacteria_target_profiles()
 profile2def = t.map_cdd_profile2def()
-# src2org = t.map_src2org()
 gid2arcog_cdd = t.map_gid2arcog_cdd()
-# gid2arcog = t.map_gid2arcog()
+
 
 def write_to_xls(xls_file, kplet):
 
