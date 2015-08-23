@@ -61,7 +61,7 @@ class Kplet(object):
         self.id = id
         self.weight = weight
         self.count = count
-        self.files = files
+        self.files = sorted(files)
         self.locations = {f:[] for f in self.files}
 
     def load_locations(self, neighborhoods_path):
