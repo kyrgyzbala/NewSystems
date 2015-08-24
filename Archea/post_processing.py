@@ -75,13 +75,14 @@ if __name__ == '__main__':
     # id2cdd, cdd2id, cdd2def = lib.db.map_id2cdd_cdd2id_cdd2def()
     # duplets = d.get_report_kplets(limit_to=500,load_locations=True)
     # triplets = tr.get_report_kplets(limit_to=500,load_locations=True)
-    pentaplets = p.get_report_kplets(limit_to=500,load_locations=True)
+    pentaplets = d.get_report_kplets(limit_to=500,load_locations=True)
 
-    import lib.utils.merging as merging
-    pentaplets = merging.merge_kplets_within_order2(pentaplets)
+    pentaplets = merging.merge_kplets_within_order(pentaplets)
+    for cnt, kplet_list in enumerate(pentaplets):
+        print cnt, len(kplet_list)
     sys.exit()
     print 'Generating summaries'
-    summarized_5plets = merge_similar_kplets(p.get_report_kplets(limit_to=500))
+    summarized_5plets = merging.merge_similar_kplets(p.get_report_kplets(limit_to=500))
     summarized_4plets = merge_similar_kplets(q.get_report_kplets(limit_to=500))
     summarized_3plets = merge_similar_kplets(tr.get_report_kplets(limit_to=500))
     summarized_2plets = merge_similar_kplets(d.get_report_kplets(limit_to=500))

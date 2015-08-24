@@ -56,7 +56,7 @@ class Neighborhood(object):
 class Kplet(object):
 
     def __init__(self, id, codes, weight=None, count=None, files=None):
-        self.codes = codes
+        self.codes = set(codes)
         self.k = len(codes)
         self.id = id
         self.weight = weight
