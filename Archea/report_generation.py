@@ -1,10 +1,9 @@
 __author__ = 'hudaiber'
 
 import sys
-
 import xlsxwriter as x
 
-from lib.db.archea import db_tools
+from lib.db.archea import db_tools, neighborhoods_path
 from lib.utils import tools as t
 
 if sys.platform=='darwin':
@@ -16,22 +15,25 @@ elif sys.platform=='linux2':
 import global_variables as gv
 import os
 
-
 target_profiles = t.target_profiles()
 profile2def = t.map_profile2def()
-# src2org = t.map_src2org()
 gid2arcog_cdd = t.map_gid2arcog_cdd()
-# gid2arcog = t.map_gid2arcog()
-
-neighborhood_files_path = os.path.join(gv.project_data_path, 'Archea/genes_and_flanks/win_10/pty/')
+neighborhood_files_path = neighborhoods_path()
 
 
-def write_to_xls(xls_file, kplet):
+def write_to_xls(xls_file, kplets):
 
-    kplet_cdd_codes = kplet[0]
-    kplet_files = kplet[1]
-    # kplet_files = kplet_files.split(',')
+    community = set()
+    [community.update(kplet.codes) for kplet in kplets]
+    _file2kplets = {}
+    for kplet in kplets:
+        for f in kplet.files:
+            if f in _file2kplets:
+                _file2kplets[f].append(kplet)
+            else:
+                _file2kplets[f] = [kplet]
 
+    kplet_files= _file2kplets.keys()
     _org2src, _src2files = db_tools.archea_org2src_src2files_map(kplet_files)
 
     workbook = x.Workbook(xls_file)
@@ -53,23 +55,33 @@ def write_to_xls(xls_file, kplet):
     target_format = workbook.add_format()
     target_format.set_font_color("red")
 
+    target_format_neighborhood = workbook.add_format()
+    target_format_neighborhood.set_font_color("red")
+    target_format_neighborhood.set_bg_color("#c4bdbd")
+
     kplet_format = workbook.add_format()
     kplet_format.set_font_color("green")
+
+    kplet_format_neighborhood = workbook.add_format()
+    kplet_format_neighborhood.set_font_color("green")
+    kplet_format_neighborhood.set_bg_color("#c4bdbd")
 
     top_border = 0
     left_border = 0
 
-    worksheet.merge_range(0, 0, 0, 10, 'k-plet: ' + ' '.join(kplet_cdd_codes), title_format)
-    top_border += 1
-    worksheet.merge_range(top_border, 0, top_border, 10, 'Organisms: ', title_format)
+    worksheet.merge_range(0, 0, 0, 10, 'Community: ' + ' '.join(community), title_format)
     top_border += 1
 
-    for org in _org2src.keys():
-        worksheet.merge_range(top_border, 2, top_border, 10, org, title_format)
-        top_border += 1
+    organisms = sorted(_org2src.keys())
+    worksheet.merge_range(top_border, 0, top_border, 10, 'Organisms: %d'%len(organisms), title_format)
+    top_border += 1
+
+    worksheet.merge_range(top_border, 0, top_border, 10, ' '.join(organisms))
+    top_border += 1
 
     top_border += 1
-    for org, srcs in _org2src.items():
+    for org in sorted(_org2src.keys()):
+        srcs = _org2src[org]
 
         for src in srcs:
             _files = _src2files[src]
@@ -89,16 +101,16 @@ def write_to_xls(xls_file, kplet):
                 cur_top_border += 2
 
                 for gene in nbr.genes:
+
                     cur_cogid = gene.cogid
                     if cur_cogid in target_profiles:
-                        data_format = target_format
-                    elif cur_cogid in kplet_cdd_codes:
-                        data_format = kplet_format
+                        data_format = target_format_neighborhood if gene.tag == 'neighborhood' else target_format
+                    elif cur_cogid in community:
+                        data_format = kplet_format_neighborhood if gene.tag == 'neighborhood' else kplet_format
                     else:
                         data_format = workbook.add_format()
-
-                    if gene.tag == 'neighborhood':
-                        data_format.set_bg_color('#c4bdbd')
+                        if gene.tag == 'neighborhood':
+                            data_format.set_bg_color('#c4bdbd')
 
                     if cur_cogid in ["", "-", None]:
                         cur_def = ""
@@ -115,15 +127,29 @@ def write_to_xls(xls_file, kplet):
 
                             for c in cur_cogid:
                                 if c in target_profiles:
-                                    data_format = target_format
-                                elif c in kplet_cdd_codes:
-                                    data_format = kplet_format
+                                    data_format = target_format_neighborhood if gene.tag == 'neighborhood' else target_format
+                                    break
+                                if c in community:
+                                    data_format = kplet_format_neighborhood if gene.tag == 'neighborhood' else kplet_format
+                                    break
 
                     data_raw = [gene.gid, gene.pFrom, gene.pTo, gene.strand, gene.cogid, cur_def]
                     worksheet.write_row(cur_top_border, left_border, data_raw, data_format)
                     worksheet.write_row(cur_top_border, left_border+row_len, [" "])
                     cur_top_border += 1
+
+                cur_top_border += 2
+                worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1, "Kplets:")
+                cur_top_border += 1
+                worksheet.write_row(cur_top_border, left_border, ["Id", "Profiles"])
+                cur_top_border += 1
+
+                for kplet in _file2kplets[os.path.basename(nbr.source_file)]:
+                    worksheet.write_row(cur_top_border, left_border, [kplet.id, " ".join(kplet.codes)])
+                    cur_top_border += 1
                 left_border += row_len + 1
+
+
     workbook.close()
 
 

@@ -1,7 +1,8 @@
 __author__ = 'Sanjarbek Hudaiberdiev'
 
 from lib.db import DbClass
-
+from lib.utils.classes import Kplet
+from lib.db.archea import neighborhoods_path
 
 def store_kplets(kplets, fname):
 
@@ -116,10 +117,10 @@ def get_code_kplet(kplet_id, id2cdd=None):
     return retval
 
 
-def get_report_kplets(id2cdd ,limit_to=500):
+def get_report_kplets(id2cdd ,limit_to=500, load_locations=None):
 
     _db = DbClass()
-    _db.cmd = """SET group_concat_max_len=1500000"""
+    _db.cmd = """SET group_concat_max_len=1500000;"""
     _db.execute()
 
     _db.cmd = """select ap.* ,count(*) as cnt, sum(w.weight) as wgt, group_concat(awf.name) as an
@@ -138,9 +139,16 @@ def get_report_kplets(id2cdd ,limit_to=500):
     for row in _db.retrieve():
         id = row[0]
         kplet_codes = [id2cdd[int(id)] for id in row[1:5]]
+        if len(set(kplet_codes)) != 4:
+            continue
         count = row[5]
         weight = row[6]
-        files = row[7]
-        out_list.append([id, kplet_codes, count, weight, files])
+        files = row[8].split(',')
+        tmp_kplet = Kplet(id=id, codes=kplet_codes, weight=weight, count=count, files=files)
+        out_list.append(tmp_kplet)
+
+    _path = neighborhoods_path()
+    if load_locations:
+        [kplet.load_locations(_path) for kplet in out_list]
 
     return out_list

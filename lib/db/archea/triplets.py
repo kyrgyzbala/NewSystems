@@ -107,6 +107,8 @@ def get_report_kplets(limit_to=300, load_locations=None):
     for row in _db.retrieve():
         id = row[0]
         kplet_codes = (row[1:4])
+        if len(set(kplet_codes)) != 3:
+            continue
         count = row[4]
         weight = row[5]
         files = row[6].split(',')

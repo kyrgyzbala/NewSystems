@@ -19,22 +19,6 @@ def get_multiple_kplets():
     return _db.retrieve()
 
 
-# def store_kplets(kplets, fname):
-#
-#     for kplet in kplets:
-#         l = list(kplet)
-#         l.sort()
-#         kplet_id = retrieve_pentaplet_id(l)
-#
-#         if not kplet_id:
-#             insert_pentaplet(l)
-#             kplet_id = retrieve_pentaplet_id(l)
-#         connection.commit()
-#
-#         file_id = get_file_id(fname)
-#         insert_pentaplet_file(kplet_id, file_id)
-
-
 def get_archaea_kplets():
 
     sql_cmd = """select apc.*, s1.cnt, s1.wgt
@@ -99,6 +83,8 @@ def get_report_kplets(limit_to=300, load_locations=None):
     for row in _db.retrieve():
         id = row[0]
         kplet_codes = (row[1:6])
+        if len(set(kplet_codes)) != 5:
+            continue
         count = row[6]
         weight = row[7]
         files = row[8].split(',')

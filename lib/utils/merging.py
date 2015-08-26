@@ -88,7 +88,9 @@ def _similar_same_order(kplet_1, kplet_2):
 
     Procedure implements the similarity check for different values of k
     """
+
     assert len(kplet_1.codes) == len(kplet_2.codes)
+
     k = len(kplet_1.codes)
     common = len(kplet_1.codes.intersection(kplet_2.codes))
     if k == 5:
@@ -119,6 +121,7 @@ def merge_kplets_within_order(kplets):
             if merged_out[j] == 1:
                 continue
             inner_kplet = kplets[j]
+
             if _similar_same_order(outer_kplet, inner_kplet):
                 to_move.append(inner_kplet)
                 merged_out[j] = 1
@@ -172,40 +175,28 @@ def merge_kplets_across_order(superplets_pool, subplets_pool):
 
     superplet_codes = []
     for superplet_list in superplets_pool:
-        tmp_codes = []
+        tmp_codes = set([])
         for kplet in superplet_list:
-            tmp_codes += kplet.codes
+            tmp_codes.update(kplet.codes)
         superplet_codes.append(tmp_codes)
 
+    assert len(superplet_codes)==len(superplets_pool)
 
+    merged_out = [[0]*len(subplets_list) for subplets_list in subplets_pool]
 
+    for subplet_outer_ind in range(len(subplets_pool)):
+        subplet_list = subplets_pool[subplet_outer_ind]
 
-    for i in range(len(subplets)):
-        subplet = subplets[i]
+        for subplet_inner_ind in range(len(subplet_list)):
+            cur_subplet = subplet_list[subplet_inner_ind]
 
-        [id_subplet, codes_subplet, (included_subplet, excluded_subplet)] = summary_subplet
+            for superplet_ind in range(len(superplets_pool)):
 
-        for j in range(len(superplet_summaries)):
-            summary_superplet = superplet_summaries[j]
-            [id_superplet, codes_superplet, (included_superplet, excluded_superplets)] = summary_superplet
+                if cur_subplet.codes.issubset(superplet_codes[superplet_ind]):
+                    superplets_pool[superplet_ind].append(cur_subplet)
+                    merged_out[subplet_outer_ind][subplet_inner_ind] = 1
+                    break
 
-            if codes_subplet.issubset(codes_superplet):
-                for f in included_subplet:
-                    if f not in included_superplet and f not in excluded_superplets:
-                        superplet_summaries[j][2][0].append(f)
+    subplets_pool = [[subplet_list[i] for i in range(len(subplet_list)) if not merged_out[cnt][i]] for cnt, subplet_list in enumerate(subplets_pool)]
 
-                included_subplet = []
-                break
-
-            if len(codes_subplet.intersection(codes_superplet)) >= ceil(len(codes_subplet)*0.7):
-                for f in included_subplet:
-                    if f in included_superplet or f in excluded_superplets:
-                        included_subplet.remove(f)
-
-        if included_subplet:
-            subplet_summaries[i] = [id_subplet, codes_subplet, (included_subplet, excluded_subplet)]
-        else:
-            subplet_summaries[i] = []
-
-    subplet_summaries = filter(None, subplet_summaries)
-    return superplet_summaries, subplet_summaries
+    return  superplets_pool, subplets_pool
