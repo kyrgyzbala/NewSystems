@@ -46,21 +46,21 @@ def generate_plots(limit_to, reports_folder):
 
 if __name__ == '__main__':
 
-    # reports_file_dir = os.path.join('reports/merged_across_kplets/top_500/')
-    # limit_to = 500
-    # print "Generating reports for limit_to:", limit_to
-    # generate_plots(limit_to, reports_file_dir)
-    # print 'Done'
-    # print "------------------------"
-    # print
-    #
-    # limit_to = 1000
-    # reports_file_dir = os.path.join('reports/merged_across_kplets/top_1000/')
-    # print "Generating reports for limit_to:", limit_to
-    # generate_plots(limit_to, reports_file_dir)
-    # print 'Done'
-    # print "------------------------"
-    # print
+    reports_file_dir = os.path.join('reports/merged_across_kplets/top_500/')
+    limit_to = 500
+    print "Generating reports for limit_to:", limit_to
+    generate_plots(limit_to, reports_file_dir)
+    print 'Done'
+    print "------------------------"
+    print
+
+    limit_to = 1000
+    reports_file_dir = os.path.join('reports/merged_across_kplets/top_1000/')
+    print "Generating reports for limit_to:", limit_to
+    generate_plots(limit_to, reports_file_dir)
+    print 'Done'
+    print "------------------------"
+    print
 
     limit_to = 1000000
     reports_file_dir = os.path.join('reports/merged_across_kplets/all/')

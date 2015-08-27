@@ -80,6 +80,9 @@ def write_to_xls(xls_file, kplets):
     top_border += 1
 
     top_border += 1
+
+    outliers = []
+
     for org in sorted(_org2src.keys()):
         srcs = _org2src[org]
 
@@ -88,6 +91,12 @@ def write_to_xls(xls_file, kplets):
             neighborhoods = t.load_neighborhoods(neighborhood_files_path, _files)
 
             for nbr in neighborhoods:
+
+                cur_kplets = _file2kplets[os.path.basename(nbr.source_file)]
+
+                if len(cur_kplets) <= 5:
+                    outliers.append([org, src, nbr])
+                    continue
 
                 cur_top_border = top_border
 
@@ -144,11 +153,75 @@ def write_to_xls(xls_file, kplets):
                 worksheet.write_row(cur_top_border, left_border, ["Id", "Profiles"])
                 cur_top_border += 1
 
-                for kplet in _file2kplets[os.path.basename(nbr.source_file)]:
+                for kplet in cur_kplets:
                     worksheet.write_row(cur_top_border, left_border, [kplet.id, " ".join(kplet.codes)])
                     cur_top_border += 1
                 left_border += row_len + 1
 
+    for outlier in outliers:
+
+        [org, src, nbr] = outlier
+        cur_kplets = _file2kplets[os.path.basename(nbr.source_file)]
+
+        cur_top_border = top_border
+
+        if not nbr.flank_extension:
+            nbr.extend_flanks(10, os.path.join(gv.pty_data_path, org, "%s.pty" % src), gid2arcog_cdd)
+
+        worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1, "%s %s" % (org, src), header_format)
+        cur_top_border += 1
+        worksheet.write_row(cur_top_border, left_border, column_names, header_format)
+
+        cur_top_border += 2
+
+        for gene in nbr.genes:
+
+            cur_cogid = gene.cogid
+            if cur_cogid in target_profiles:
+                data_format = target_format_neighborhood if gene.tag == 'neighborhood' else target_format
+            elif cur_cogid in community:
+                data_format = kplet_format_neighborhood if gene.tag == 'neighborhood' else kplet_format
+            else:
+                data_format = workbook.add_format()
+                if gene.tag == 'neighborhood':
+                    data_format.set_bg_color('#c4bdbd')
+
+            if cur_cogid in ["", "-", None]:
+                cur_def = ""
+            else:
+                cur_cogid = cur_cogid.split()
+                if len(cur_cogid) > 0:
+                    cur_def = []
+                    for k in cur_cogid:
+                        if k in profile2def:
+                            cur_def.append(profile2def[k])
+                        else:
+                            cur_def.append("")
+                    cur_def = " | ".join(cur_def)
+
+                    for c in cur_cogid:
+                        if c in target_profiles:
+                            data_format = target_format_neighborhood if gene.tag == 'neighborhood' else target_format
+                            break
+                        if c in community:
+                            data_format = kplet_format_neighborhood if gene.tag == 'neighborhood' else kplet_format
+                            break
+
+            data_raw = [gene.gid, gene.pFrom, gene.pTo, gene.strand, gene.cogid, cur_def]
+            worksheet.write_row(cur_top_border, left_border, data_raw, data_format)
+            worksheet.write_row(cur_top_border, left_border+row_len, [" "])
+            cur_top_border += 1
+
+        cur_top_border += 2
+        worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1, "Kplets:")
+        cur_top_border += 1
+        worksheet.write_row(cur_top_border, left_border, ["Id", "Profiles"])
+        cur_top_border += 1
+
+        for kplet in cur_kplets:
+            worksheet.write_row(cur_top_border, left_border, [kplet.id, " ".join(kplet.codes)])
+            cur_top_border += 1
+        left_border += row_len + 1
 
     workbook.close()
 
