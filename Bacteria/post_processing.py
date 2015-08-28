@@ -18,9 +18,9 @@ from lib.db.bacteria import duplets as d
 from lib.db import map_id2cdd
 from lib.db.bacteria import neighborhoods_path
 from lib.db.bacteria.db_tools import file2src_src2org_map
-import report_generation as r
 import lib.utils.merging as merging
 import lib.utils.tools as t
+import lib.utils.reporting as r
 
 
 def generate_plots(limit_to, reports_folder, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path, profile_id2code):
@@ -58,8 +58,7 @@ if __name__ == '__main__':
     neighborhood_files_path = neighborhoods_path()
     profile_id2code = map_id2cdd()
 
-
-    for limit_to, report_dir in zip([300, 500, 1000],['top_300','top_500','top_1000']):
+    for limit_to, report_dir in zip([300, 500, 1000, 1000000],['top_300','top_500','top_1000', 'all']):
         reports_file_dir = os.path.join(gv.project_data_path, 'Bacteria/reports/merged_across_kplets/', report_dir)
         print "Generating reports for limit_to:", limit_to
         generate_plots(limit_to, reports_file_dir, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path, profile_id2code)
