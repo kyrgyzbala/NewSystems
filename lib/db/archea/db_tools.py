@@ -79,7 +79,7 @@ def org2src_src2files_map(files):
 def file2src_src2org_map(files):
 
     _sql_cmd = """select awf.name, s.name, g.name
-                  from bacteria_win10_files awf
+                  from archea_win10_files awf
                   inner join sources s on awf.source_id=s.id
                   inner join genomes g on s.genome_id = g.id
                   where awf.name in ('%s')"""

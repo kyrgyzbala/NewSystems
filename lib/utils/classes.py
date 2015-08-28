@@ -35,7 +35,7 @@ class Neighborhood(object):
             if pty_genes[i].gid == first:
                 upstream = pty_genes[i-flank_size: i]
             if pty_genes[i].gid == last:
-                downstream = pty_genes[i+1:i+flank_size]
+                downstream = pty_genes[i+1:i+flank_size+1]
                 break
 
         for gene in upstream:
@@ -76,12 +76,20 @@ class Kplet(object):
                         break
             self.locations[f] = gi_list
 
+    def __cmp__(self, other):
+        if self.weight > other.weight:
+            return 1
+        elif self.weight < other.weight:
+            return -1
+        else:
+            return 0
+
 
 class NeighborhoodFileSummary(object):
     def __init__(self, file_name, kplets, neighborhood, org, src):
         self.file_name = file_name
         self.kplets = kplets
-        self.neigborhood = neighborhood
+        self.neighborhood = neighborhood
         self.count = sum([kplet.count for kplet in kplets])
         self.weight = sum([kplet.weight for kplet in kplets])
         self.org = org
