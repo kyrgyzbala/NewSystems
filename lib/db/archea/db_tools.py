@@ -44,7 +44,7 @@ def get_file_id(fname):
     return rows[0][0]
 
 
-def archea_org2src_src2files_map(files):
+def org2src_src2files_map(files):
 
     _sql_cmd = """select awf.name, s.name, g.name
                   from archea_win10_files awf

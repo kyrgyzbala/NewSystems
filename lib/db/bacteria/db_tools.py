@@ -27,7 +27,7 @@ def get_file_id(fname):
     return rows[0][0]
 
 
-def bacteria_org2src_src2files_map(files):
+def org2src_src2files_map(files):
 
     _db = DbClass()
 

@@ -2,7 +2,7 @@ __author__ = 'Sanjarbek Hudaiberdiev'
 
 from lib.db import DbClass
 from lib.utils.classes import Kplet
-from lib.db.archea import neighborhoods_path
+from lib.db.bacteria import neighborhoods_path
 
 def store_kplets(kplets, fname):
 
@@ -143,7 +143,7 @@ def get_report_kplets(id2cdd ,limit_to=500, load_locations=None):
             continue
         count = row[5]
         weight = row[6]
-        files = row[8].split(',')
+        files = row[7].split(',')
         tmp_kplet = Kplet(id=id, codes=kplet_codes, weight=weight, count=count, files=files)
         out_list.append(tmp_kplet)
 

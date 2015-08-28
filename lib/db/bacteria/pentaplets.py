@@ -2,7 +2,8 @@ __author__ = 'Sanjarbek Hudaiberdiev'
 
 from lib.db import DbClass
 from lib.utils.classes import Kplet
-from lib.db.archea import neighborhoods_path
+from lib.db.bacteria import neighborhoods_path
+import sys
 
 def get_code_kplet(kplet_id):
 
@@ -98,6 +99,7 @@ def get_report_kplets(id2cdd, limit_to=500, load_locations=None):
     for row in _db.retrieve():
         id = row[0]
         kplet_codes = [id2cdd[int(id)] for id in row[1:6]]
+
         if len(set(kplet_codes)) != 5:
             continue
         count = row[6]

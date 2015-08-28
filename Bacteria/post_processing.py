@@ -15,19 +15,21 @@ from lib.db.bacteria import pentaplets as p
 from lib.db.bacteria import quadruplets as q
 from lib.db.bacteria import triplets as tr
 from lib.db.bacteria import duplets as d
+from lib.db import map_id2cdd
+from lib.db.bacteria import neighborhoods_path
+from lib.db.bacteria.db_tools import org2src_src2files_map
 import report_generation as r
 import lib.utils.merging as merging
-from lib.utils.tools import map_gid2cdd
+import lib.utils.tools as t
 
-_gid2cdd = map_gid2cdd()
 
-def generate_plots(limit_to, reports_folder):
+def generate_plots(limit_to, reports_folder, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path, profile_id2code):
 
     print 'Reading kplets from database'
-    pentaplets = p.get_report_kplets(_gid2cdd, limit_to=limit_to, load_locations=True)
-    quadruplets = q.get_report_kplets(_gid2cdd, limit_to=limit_to, load_locations=True)
-    triplets = tr.get_report_kplets(_gid2cdd, limit_to=limit_to, load_locations=True)
-    duplets = d.get_report_kplets(_gid2cdd, limit_to=limit_to, load_locations=True)
+    pentaplets = p.get_report_kplets(profile_id2code, limit_to=limit_to, load_locations=True)
+    quadruplets = q.get_report_kplets(profile_id2code, limit_to=limit_to, load_locations=True)
+    triplets = tr.get_report_kplets(profile_id2code, limit_to=limit_to, load_locations=True)
+    duplets = d.get_report_kplets(profile_id2code, limit_to=limit_to, load_locations=True)
 
     print 'Merging within order'
     pentaplets = merging.merge_kplets_within_order(pentaplets)
@@ -44,31 +46,23 @@ def generate_plots(limit_to, reports_folder):
     for i, kplet_pool in zip([5, 4, 3, 2], [pentaplets, quadruplets, triplets, duplets]):
         for j, kplet_sublist in enumerate(kplet_pool):
             xls_file_name = os.path.join(reports_folder, str(i),  "%d_%d.xls" % (j+1, i))
-            r.write_to_xls(xls_file_name, kplet_sublist)
+            r.write_to_xls(xls_file_name, kplet_sublist, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path, org2src_src2files_map)
 
 
 if __name__ == '__main__':
 
-    reports_file_dir = os.path.join(gv.project_data_path, 'Bacteria', 'reports/merged_across_kplets/top_300/')
-    limit_to = 300
-    print "Generating reports for limit_to:", limit_to
-    generate_plots(limit_to, reports_file_dir)
-    print 'Done'
-    print "------------------------"
-    print
+    print 'Pre-Loading dictionaries'
+    target_profiles = t.bacteria_target_profiles()
+    profile2def = t.map_cdd_profile2def()
+    gid2arcog_cdd = t.map_gid2arcog_cdd()
+    neighborhood_files_path = neighborhoods_path()
+    profile_id2code = map_id2cdd()
 
-    limit_to = 500
-    reports_file_dir = os.path.join(gv.project_data_path, 'Bacteria', 'reports/merged_across_kplets/top_500/')
-    print "Generating reports for limit_to:", limit_to
-    generate_plots(limit_to, reports_file_dir)
-    print 'Done'
-    print "------------------------"
-    print
 
-    limit_to = 1000
-    reports_file_dir = os.path.join(gv.project_data_path, 'Bacteria', 'reports/merged_across_kplets/top_1000/')
-    print "Generating reports for limit_to:", limit_to
-    generate_plots(limit_to, reports_file_dir)
-    print 'Done'
-    print "------------------------"
-    print
+    for limit_to, report_dir in zip([300, 500, 1000],['top_300','top_500','top_1000']):
+        reports_file_dir = os.path.join(gv.project_data_path, 'Bacteria/reports/merged_across_kplets/', report_dir)
+        print "Generating reports for limit_to:", limit_to
+        generate_plots(limit_to, reports_file_dir, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path, profile_id2code)
+        print 'Done'
+        print "------------------------"
+        print
