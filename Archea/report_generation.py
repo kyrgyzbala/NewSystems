@@ -3,16 +3,18 @@ __author__ = 'hudaiber'
 import sys
 import xlsxwriter as x
 
-from lib.db.archea import db_tools, neighborhoods_path
-from lib.utils import tools as t
-
 if sys.platform=='darwin':
     sys.path.append('/Users/hudaiber/Projects/lib/BioPy/')
     sys.path.append('/Users/hudaiber/Projects/SystemFiles/')
 elif sys.platform=='linux2':
     sys.path.append('/home/hudaiber/Projects/lib/BioPy/')
     sys.path.append('/home/hudaiber/Projects/SystemFiles/')
+
 import global_variables as gv
+sys.path.append(gv.project_code_path)
+
+from lib.db.archea import db_tools, neighborhoods_path
+from lib.utils import tools as t
 import os
 
 target_profiles = t.target_profiles()

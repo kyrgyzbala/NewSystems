@@ -8,7 +8,8 @@ if sys.platform=='darwin':
 elif sys.platform=='linux2':
     sys.path.append('/home/hudaiber/Projects/SystemFiles/')
 
-sys.path.append('/Users/hudaiber/Projects/NewSystems/code/')
+import global_variables as gv
+sys.path.append(gv.project_code_path)
 
 from lib.db.archea import pentaplets as p
 from lib.db.archea import quadruplets as q
@@ -46,7 +47,7 @@ def generate_plots(limit_to, reports_folder):
 
 if __name__ == '__main__':
 
-    reports_file_dir = os.path.join('reports/merged_across_kplets/top_500/')
+    reports_file_dir = os.path.join(gv.project_data_path, 'Archea', 'reports/merged_across_kplets/top_500/')
     limit_to = 500
     print "Generating reports for limit_to:", limit_to
     generate_plots(limit_to, reports_file_dir)
@@ -55,7 +56,7 @@ if __name__ == '__main__':
     print
 
     limit_to = 1000
-    reports_file_dir = os.path.join('reports/merged_across_kplets/top_1000/')
+    reports_file_dir = os.path.join(gv.project_data_path, 'Archea', 'reports/merged_across_kplets/top_1000/')
     print "Generating reports for limit_to:", limit_to
     generate_plots(limit_to, reports_file_dir)
     print 'Done'
@@ -63,7 +64,7 @@ if __name__ == '__main__':
     print
 
     limit_to = 1000000
-    reports_file_dir = os.path.join('reports/merged_across_kplets/all/')
+    reports_file_dir = os.path.join(gv.project_data_path, 'Archea', 'reports/merged_across_kplets/all/')
     print "Generating reports for limit_to:", limit_to
     generate_plots(limit_to, reports_file_dir)
     print 'Done'

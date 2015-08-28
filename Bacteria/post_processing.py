@@ -8,6 +8,8 @@ if sys.platform=='darwin':
 elif sys.platform=='linux2':
     sys.path.append('/home/hudaiber/Projects/SystemFiles/')
 
+import global_variables as gv
+sys.path.append(gv.project_code_path)
 
 from lib.db.bacteria import pentaplets as p
 from lib.db.bacteria import quadruplets as q
@@ -15,15 +17,17 @@ from lib.db.bacteria import triplets as tr
 from lib.db.bacteria import duplets as d
 import report_generation as r
 import lib.utils.merging as merging
+from lib.utils.tools import map_gid2cdd
 
+_gid2cdd = map_gid2cdd()
 
 def generate_plots(limit_to, reports_folder):
 
     print 'Reading kplets from database'
-    pentaplets = p.get_report_kplets(limit_to=limit_to, load_locations=True)
-    quadruplets = q.get_report_kplets(limit_to=limit_to, load_locations=True)
-    triplets = tr.get_report_kplets(limit_to=limit_to, load_locations=True)
-    duplets = d.get_report_kplets(limit_to=limit_to, load_locations=True)
+    pentaplets = p.get_report_kplets(_gid2cdd, limit_to=limit_to, load_locations=True)
+    quadruplets = q.get_report_kplets(_gid2cdd, limit_to=limit_to, load_locations=True)
+    triplets = tr.get_report_kplets(_gid2cdd, limit_to=limit_to, load_locations=True)
+    duplets = d.get_report_kplets(_gid2cdd, limit_to=limit_to, load_locations=True)
 
     print 'Merging within order'
     pentaplets = merging.merge_kplets_within_order(pentaplets)
@@ -45,8 +49,16 @@ def generate_plots(limit_to, reports_folder):
 
 if __name__ == '__main__':
 
-    reports_file_dir = os.path.join('reports/merged_across_kplets/top_500/')
+    reports_file_dir = os.path.join(gv.project_data_path, 'Bacteria', 'reports/merged_across_kplets/top_300/')
+    limit_to = 300
+    print "Generating reports for limit_to:", limit_to
+    generate_plots(limit_to, reports_file_dir)
+    print 'Done'
+    print "------------------------"
+    print
+
     limit_to = 500
+    reports_file_dir = os.path.join(gv.project_data_path, 'Bacteria', 'reports/merged_across_kplets/top_500/')
     print "Generating reports for limit_to:", limit_to
     generate_plots(limit_to, reports_file_dir)
     print 'Done'
@@ -54,15 +66,7 @@ if __name__ == '__main__':
     print
 
     limit_to = 1000
-    reports_file_dir = os.path.join('reports/merged_across_kplets/top_1000/')
-    print "Generating reports for limit_to:", limit_to
-    generate_plots(limit_to, reports_file_dir)
-    print 'Done'
-    print "------------------------"
-    print
-
-    limit_to = 1000000
-    reports_file_dir = os.path.join('reports/merged_across_kplets/all/')
+    reports_file_dir = os.path.join(gv.project_data_path, 'Bacteria', 'reports/merged_across_kplets/top_1000/')
     print "Generating reports for limit_to:", limit_to
     generate_plots(limit_to, reports_file_dir)
     print 'Done'
