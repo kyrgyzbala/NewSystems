@@ -17,7 +17,7 @@ from lib.db.bacteria import triplets as tr
 from lib.db.bacteria import duplets as d
 from lib.db import map_id2cdd
 from lib.db.bacteria import neighborhoods_path
-from lib.db.bacteria.db_tools import org2src_src2files_map
+from lib.db.bacteria.db_tools import file2src_src2org_map
 import report_generation as r
 import lib.utils.merging as merging
 import lib.utils.tools as t
@@ -46,7 +46,7 @@ def generate_plots(limit_to, reports_folder, target_profiles, profile2def, gid2a
     for i, kplet_pool in zip([5, 4, 3, 2], [pentaplets, quadruplets, triplets, duplets]):
         for j, kplet_sublist in enumerate(kplet_pool):
             xls_file_name = os.path.join(reports_folder, str(i),  "%d_%d.xls" % (j+1, i))
-            r.write_to_xls(xls_file_name, kplet_sublist, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path, org2src_src2files_map)
+            r.write_to_xls(xls_file_name, kplet_sublist, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path, file2src_src2org_map)
 
 
 if __name__ == '__main__':

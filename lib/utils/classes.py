@@ -75,3 +75,22 @@ class Kplet(object):
                         gi_list.append(gene.gid)
                         break
             self.locations[f] = gi_list
+
+
+class NeighborhoodFileSummary(object):
+    def __init__(self, file_name, kplets, neighborhood, org, src):
+        self.file_name = file_name
+        self.kplets = kplets
+        self.neigborhood = neighborhood
+        self.count = sum([kplet.count for kplet in kplets])
+        self.weight = sum([kplet.weight for kplet in kplets])
+        self.org = org
+        self.src = src
+
+    def __cmp__(self, other):
+        if self.weight > other.weight:
+            return 1
+        elif self.weight < other.weight:
+            return -1
+        else:
+            return 0

@@ -15,7 +15,7 @@ from lib.db.archea import pentaplets as p
 from lib.db.archea import quadruplets as q
 from lib.db.archea import triplets as tr
 from lib.db.archea import duplets as d
-from lib.db.archea.db_tools import org2src_src2files_map
+from lib.db.archea.db_tools import file2src_src2org_map
 from lib.db.archea import neighborhoods_path
 
 # import report_generation as r
@@ -47,7 +47,7 @@ def generate_plots(limit_to, reports_folder, target_profiles, profile2def, gid2a
     for i, kplet_pool in zip([5, 4, 3, 2], [pentaplets, quadruplets, triplets, duplets]):
         for j, kplet_sublist in enumerate(kplet_pool):
             xls_file_name = os.path.join(reports_folder, str(i),  "%d_%d.xls" % (j+1, i))
-            r.write_to_xls(xls_file_name,kplet_sublist,target_profiles,profile2def,gid2arcog_cdd,neighborhood_files_path,org2src_src2files_map)
+            r.write_to_xls(xls_file_name,kplet_sublist,target_profiles,profile2def,gid2arcog_cdd,neighborhood_files_path,file2src_src2org_map)
 
 
 if __name__ == '__main__':

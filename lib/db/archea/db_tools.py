@@ -76,7 +76,7 @@ def org2src_src2files_map(files):
 
 
 
-def archea_file2src_src2org_map(files):
+def file2src_src2org_map(files):
 
     _sql_cmd = """select awf.name, s.name, g.name
                   from bacteria_win10_files awf

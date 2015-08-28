@@ -57,7 +57,7 @@ def org2src_src2files_map(files):
 
 
 
-def bacteria_file2src_src2org_map(files):
+def file2src_src2org_map(files):
 
     _db = DbClass()
     _db.cmd = """select awf.name, s.name, g.name
