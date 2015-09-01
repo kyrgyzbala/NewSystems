@@ -79,12 +79,14 @@ if __name__ == '__main__':
     profile2def = t.map_profile2def()
     gid2arcog_cdd = t.map_gid2arcog_cdd()
     neighborhood_files_path = neighborhoods_path()
-    print "\n\n"
+    print "\n"
 
     for limit_to, report_dir in zip([500, 1000, 1000000], ['top_500','top_1000','all']):
-
+        limit_to = 1000000
+        report_dir = 'all'
         print "Limit_to:", limit_to
         print
         generate_plots(limit_to, report_dir, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path)
+        sys.exit()
         print '\t\tDone'
         print "------------------------\n\n"
