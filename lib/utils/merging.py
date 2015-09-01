@@ -103,11 +103,13 @@ def _similar_same_order(kplet_1, kplet_2):
         return True if common >=1 else False
 
 
-def merge_kplets_within_order(kplets):
+def merge_kplets_within_orders(kplets, target_profiles):
     """ Merge the kplets of same size, if they carry similarity in composition. Return list.
 
     Keyword arguments:
     kplets -- list of objects of lib.classes.Kplet instances"""
+
+    # First round of merging
 
     merged_kplets = []
     merged_out = [0 for i in range(len(kplets))]
@@ -126,40 +128,44 @@ def merge_kplets_within_order(kplets):
                 to_move.append(inner_kplet)
                 merged_out[j] = 1
         merged_kplets.append([outer_kplet] + to_move)
-    return merged_kplets
 
+    # Second round of merging
+    del kplets
+    del merged_out
 
-def merge_kplet_orders(superplet_summaries, subplet_summaries):
+    merged_communities = []
+    merged_out = [0 for i in range(len(merged_kplets))]
+    communities = []
 
-    for i in range(len(subplet_summaries)):
-        summary_subplet = subplet_summaries[i]
+    for merged_list in merged_kplets:
 
-        [id_subplet, codes_subplet, (included_subplet, excluded_subplet)] = summary_subplet
+        tmp_target_profiles, tmp_community_profiles = set([]), set([])
+        for kplet in merged_list:
+            tmp_target_profiles.update(set([profile for profile in kplet.codes if profile in target_profiles]))
+            tmp_community_profiles.update(set([profile for profile in kplet.codes if profile not in target_profiles]))
 
-        for j in range(len(superplet_summaries)):
-            summary_superplet = superplet_summaries[j]
-            [id_superplet, codes_superplet, (included_superplet, excluded_superplets)] = summary_superplet
+        communities.append([tmp_target_profiles, tmp_community_profiles])
 
-            if codes_subplet.issubset(codes_superplet):
-                for f in included_subplet:
-                    if f not in included_superplet and f not in excluded_superplets:
-                        superplet_summaries[j][2][0].append(f)
+    del merged_list
+    assert len(communities) == len(merged_kplets)
 
-                included_subplet = []
-                break
+    for i in range(len(merged_kplets)):
+        if merged_out[i] == 1:
+            continue
+        outer_list = merged_kplets[i]
+        to_move = []
+        for j in range(i+1, len(merged_kplets)):
+            if merged_out[j] == 1:
+                continue
+            inner_list = merged_kplets[j]
 
-            if len(codes_subplet.intersection(codes_superplet)) >= ceil(len(codes_subplet)*0.7):
-                for f in included_subplet:
-                    if f in included_superplet or f in excluded_superplets:
-                        included_subplet.remove(f)
+            if communities[i][0] == communities[j][0] and len(communities[i][1].intersection(communities[j][1])) / float(len(communities[i][1].union(communities[j][1]))) >= 0.5:
+                to_move += inner_list
+                merged_out[j] = 1
 
-        if included_subplet:
-            subplet_summaries[i] = [id_subplet, codes_subplet, (included_subplet, excluded_subplet)]
-        else:
-            subplet_summaries[i] = []
+        merged_communities.append(outer_list + to_move)
 
-    subplet_summaries = filter(None, subplet_summaries)
-    return superplet_summaries, subplet_summaries
+    return merged_communities
 
 
 def merge_kplets_across_order(superplets_pool, subplets_pool):
