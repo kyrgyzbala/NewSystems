@@ -80,7 +80,20 @@ if __name__ == '__main__':
     neighborhood_files_path = neighborhoods_path()
     profile_id2code = map_id2cdd()
 
-    for limit_to, report_dir in zip([300, 500, 1000, 1000000],['top_300','top_500','top_1000', 'all']):
+    # limit_to = 1000
+    # print 'Loading'
+    # pentaplets = p.get_report_kplets(profile2def, limit_to=limit_to, load_locations=False)
+    # print 'Merging'
+    # pentaplets = merging.merge_kplets_within_orders(pentaplets)
+    # out_dir = os.path.join(gv.project_data_path,'Archea/reports/tmp')
+    #
+    # for i, kplet_list in enumerate(pentaplets):
+    #     xls_file_name = os.path.join(out_dir,  "%d.xls" % i)
+    #     r.write_to_xls(xls_file_name,kplet_list,target_profiles,profile2def,gid2arcog_cdd,neighborhood_files_path,file2src_src2org_map)
+    # sys.exit()
+
+
+    for limit_to, report_dir in zip([300, 500, 1000, 100000],['top_300', 'top_500', 'top_1000', 'top_100000']):
 
         print "Limit_to:", limit_to
         print

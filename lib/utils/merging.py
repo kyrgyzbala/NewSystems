@@ -51,13 +51,90 @@ def _similar_same_order(kplet_1, kplet_2):
     k = len(kplet_1.codes)
     common = len(kplet_1.codes.intersection(kplet_2.codes))
     if k == 5:
-        return True if common >=3 else False
+        return True if common >3 else False
     elif k == 4:
         return True if common >2 else False
     elif k == 3:
         return True if common >=2 else False
     elif k==2:
         return True if common >=1 else False
+
+
+def merge_kplets_within_orders_iterative(kplets):
+    """ Merge the kplets of same size, if they carry similarity in composition. Return list.
+
+    Keyword arguments:
+    kplets -- list of objects of lib.classes.Kplet instances"""
+
+    # First round of merging
+    merged_kplets = []
+    merged_out = [0 for i in range(len(kplets))]
+
+    for i in range(len(kplets)):
+        if i % 1000 == 0:
+            print i
+        if merged_out[i] == 1:
+            continue
+        outer_kplet = kplets[i]
+        to_move = []
+        for j in range(i+1, len(kplets)):
+            if merged_out[j] == 1:
+                continue
+            inner_kplet = kplets[j]
+
+            if _similar_same_order(outer_kplet, inner_kplet):
+                to_move.append(inner_kplet)
+                merged_out[j] = 1
+        merged_kplets.append([outer_kplet] + to_move)
+
+    # Second round of merging
+    # Iterate the merging procedure until it converges
+    initial_length = len(merged_kplets)
+    cnt = 1
+    last_round = None
+
+    while True:
+        merged_out = [0 for i in range(len(merged_kplets))]
+        # A list for representing the merged kplets' lists in terms of profile codes
+        communities = []
+        for merged_list in merged_kplets:
+            communities.append(set(code for kplet in merged_list for code in kplet.codes))
+
+        new_merged_kplets = []
+        for i in range(len(merged_kplets)):
+            if merged_out[i] == 1:
+                continue
+            to_move = []
+            outer_community = communities[i]
+            outer_list = merged_kplets[i]
+
+            for j in range(i+1, len(merged_kplets)):
+                if merged_out[j] == 1:
+                    continue
+                inner_community = communities[j]
+                inner_list = merged_kplets[j]
+
+                common = inner_community.intersection(outer_community)
+                union = inner_community.union(outer_community)
+                # print common, outer_community, inner_community
+
+                if not common:
+                    continue
+
+                if float(len(common))/len(union) > 0.5:
+                    to_move += inner_list
+                    merged_out[j] = 1
+
+            new_merged_kplets.append(outer_list + to_move)
+
+        print cnt, len(merged_kplets), len(new_merged_kplets), len(communities), "Communities:", " ".join([str(len(l)) for l in communities])
+        cnt += 1
+
+        if len(merged_kplets) == len(new_merged_kplets):
+            merged_kplets = new_merged_kplets
+            break
+
+    return merged_kplets
 
 
 def merge_kplets_within_orders(kplets, target_profiles):
@@ -85,8 +162,9 @@ def merge_kplets_within_orders(kplets, target_profiles):
                 to_move.append(inner_kplet)
                 merged_out[j] = 1
         merged_kplets.append([outer_kplet] + to_move)
-
+    len_1 = len(kplets)
     # Second round of merging
+
     del kplets
     del merged_out
 
@@ -141,6 +219,7 @@ def merge_kplets_within_orders(kplets, target_profiles):
                     merged_out[j] = 1
 
         merged_communities.append(outer_list + to_move)
+    len_2 = len(merged_communities)
 
     # Third round of merging
 
@@ -165,15 +244,54 @@ def merge_kplets_within_orders(kplets, target_profiles):
             inner_community = merged_list_profiles[j]
             inner_list = merged_communities[j]
 
-            union = inner_community.union(outer_community)
+            smaller = min(inner_community, outer_community, key=len)
             common = inner_community.intersection(outer_community)
+            if not common:
+                continue
 
-            if float(len(common))/len(union) >= 0.8:
+            if float(len(common))/len(smaller) >= 0.7:
                 to_move += inner_list
                 merged_out[j] = 1
 
         merged_communities_2.append(outer_list + to_move)
 
+    merged_communities = merged_communities_2
+    len_3 = len(merged_communities)
+    # Fourth round of merging
+
+    merged_communities_2 = []
+    merged_out = [0 for i in range(len(merged_communities))]
+
+    merged_list_profiles = []
+
+    for merged_list in merged_communities:
+        merged_list_profiles.append(set([code for code in kplet.codes for kplet in merged_list]))
+
+    for i in range(len(merged_communities)):
+        if merged_out[i] == 1:
+            continue
+        to_move = []
+        outer_community = merged_list_profiles[i]
+        outer_list = merged_communities[i]
+
+        for j in range(i+1, len(merged_communities)):
+            if merged_out[j] == 1:
+                continue
+            inner_community = merged_list_profiles[j]
+            inner_list = merged_communities[j]
+
+            smaller = min(inner_community, outer_community, key=len)
+            common = inner_community.intersection(outer_community)
+            if not common:
+                continue
+
+            if float(len(common))/len(smaller) >= 0.7:
+                to_move += inner_list
+                merged_out[j] = 1
+
+        merged_communities_2.append(outer_list + to_move)
+    len_4 = len(merged_communities_2)
+    print 'Reduction pattern:', len_1, len_2, len_3, len_4
     return merged_communities_2
 
 
@@ -213,5 +331,6 @@ def merge_kplets_across_order(superplets_pool, subplets_pool):
                     break
 
     subplets_pool = [[subplet_list[i] for i in range(len(subplet_list)) if not merged_out[cnt][i]] for cnt, subplet_list in enumerate(subplets_pool)]
+    subplets_pool = [l for l in subplets_pool if l]
 
     return  superplets_pool, subplets_pool
