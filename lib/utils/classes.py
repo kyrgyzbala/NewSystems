@@ -62,19 +62,23 @@ class Kplet(object):
         self.weight = weight
         self.count = count
         self.files = sorted(files)
-        self.locations = {f:[] for f in self.files}
+        self.locations = {f: [] for f in self.files}
+        self.gids = set()
 
     def load_locations(self, neighborhoods_path):
 
         for f in self.files:
             genes = t.get_pty_file(neighborhoods_path+'/'+f)
-            gi_list = []
+
+            gi_list = set([])
             for gene in genes:
                 for cogid in gene.cogid.split():
                     if cogid in self.codes:
-                        gi_list.append(gene.gid)
+                        gi_list.update([gene.gid])
                         break
+
             self.locations[f] = gi_list
+            self.gids.update(gi_list)
 
     def __cmp__(self, other):
         if self.weight > other.weight:

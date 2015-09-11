@@ -68,7 +68,6 @@ def file2src_src2org_map(files):
 
     _src2org = {}
     _file2src = {}
-
     for row in _db.retrieve():
         parts = row
         [_file, _src, _org] = parts
