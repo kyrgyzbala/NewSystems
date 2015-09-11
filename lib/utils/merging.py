@@ -90,34 +90,44 @@ def merge_kplets_within_orders_iterative(kplets):
     while True:
         merged_out = [0 for i in range(len(merged_kplets))]
         # A list for representing the merged kplets' lists in terms of profile codes
-        communities = []
+        # communities = []
+        # for merged_list in merged_kplets:
+        #     communities.append(set(code for kplet in merged_list for code in kplet.codes))
+
+        gid_pool = []
         for merged_list in merged_kplets:
-            communities.append(set(code for kplet in merged_list for code in kplet.codes))
+            gid_pool.append(set(gid for kplet in merged_list for gid in kplet.gids))
 
         new_merged_kplets = []
         for i in range(len(merged_kplets)):
             if merged_out[i] == 1:
                 continue
             to_move = []
-            outer_community = communities[i]
+            # outer_community = communities[i]
+            outer_gids = gid_pool[i]
             outer_list = merged_kplets[i]
             for j in range(i+1, len(merged_kplets)):
                 if merged_out[j] == 1:
                     continue
-                inner_community = communities[j]
+                # inner_community = communities[j]
+                inner_gids = gid_pool[j]
                 inner_list = merged_kplets[j]
-                common = inner_community.intersection(outer_community)
-                union = inner_community.union(outer_community)
+
+                # common = inner_community.intersection(outer_community)
+                # union = inner_community.union(outer_community)
+                common = len(inner_gids.intersection(outer_gids))
+                smaller = min(len(inner_gids), len(outer_gids))
+
                 if not common:
                     continue
 
-                if float(len(common))/len(union) > 0.5:
+                if float(common)/smaller > 0.8:
                     to_move += inner_list
                     merged_out[j] = 1
 
             new_merged_kplets.append(outer_list + to_move)
 
-        print cnt, len(merged_kplets), len(new_merged_kplets), len(communities), "Communities:", " ".join([str(len(l)) for l in communities])
+        print cnt, len(merged_kplets), len(new_merged_kplets), "Communities:", " ".join([str(len(l)) for l in merged_kplets])
         cnt += 1
 
         if len(merged_kplets) == len(new_merged_kplets):
