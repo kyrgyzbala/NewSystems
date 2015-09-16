@@ -53,19 +53,14 @@ def _similar_same_order(kplet_1, kplet_2):
         return True if common >2 else False
     elif k == 3:
         return True if common >=2 else False
-    elif k==2:
+    elif k == 2:
         return True if common >=1 else False
 
 
-def merge_kplets_within_orders_iterative(kplets):
-    """ Merge the kplets of same size, if they carry similarity in composition. Return list.
+def basic_merge_within_orders(kplets):
 
-    Keyword arguments:
-    kplets -- list of objects of lib.classes.Kplet instances"""
-
-    # First round of merging
     merged_kplets = []
-    merged_out = [0 for i in range(len(kplets))]
+    merged_out = [0 for _ in range(len(kplets))]
 
     for i in range(len(kplets)):
         if i % 1000 == 0:
@@ -83,6 +78,20 @@ def merge_kplets_within_orders_iterative(kplets):
                 to_move.append(inner_kplet)
                 merged_out[j] = 1
         merged_kplets.append([outer_kplet] + to_move)
+
+    return merged_kplets
+
+
+
+def merge_kplets_within_orders_iterative(kplets):
+    """ Merge the kplets of same size, if they carry similarity in composition. Return list.
+
+    Keyword arguments:
+    kplets -- list of objects of lib.classes.Kplet instances"""
+
+    # First round of merging
+
+    merged_kplets = basic_merge_within_orders(kplets)
 
     # Second round of merging
     # Iterate the merging procedure until it converges

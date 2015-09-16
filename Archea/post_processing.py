@@ -22,6 +22,7 @@ from lib.db.archea import neighborhoods_path
 from lib.utils import reporting as r
 import lib.utils.merging as merging
 import lib.utils.tools as t
+import pickle
 
 
 def generate_plots(limit_to, report_dir, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path):
@@ -72,6 +73,27 @@ def generate_plots(limit_to, report_dir, target_profiles, profile2def, gid2arcog
             r.write_to_xls(xls_file_name,kplet_sublist,target_profiles,profile2def,gid2arcog_cdd,neighborhood_files_path,file2src_src2org_map)
 
 
+def generate_pickles(save_path, limit_to):
+
+    if not os.path.exists(save_path):
+        os.mkdir(save_path)
+
+    pentaplets = p.get_report_kplets(limit_to=limit_to, load_locations=True)
+    quadruplets = q.get_report_kplets(limit_to=limit_to, load_locations=True)
+    triplets = tr.get_report_kplets(limit_to=limit_to, load_locations=True)
+    duplets = d.get_report_kplets(limit_to=limit_to, load_locations=True)
+
+    pentaplets = merging.basic_merge_within_orders(pentaplets)
+    quadruplets = merging.basic_merge_within_orders(quadruplets)
+    triplets = merging.basic_merge_within_orders(triplets)
+    duplets = merging.basic_merge_within_orders(duplets)
+
+    pickle.dump(pentaplets, open(os.path.join(save_path, 'pentaplets.p'), 'w'))
+    pickle.dump(quadruplets, open(os.path.join(save_path, 'quadruplets.p'), 'w'))
+    pickle.dump(triplets, open(os.path.join(save_path, 'triplets.p'), 'w'))
+    pickle.dump(duplets, open(os.path.join(save_path, 'duplets.p'), 'w'))
+
+
 if __name__ == '__main__':
 
     print 'Pre-Loading dictionaries'
@@ -81,9 +103,21 @@ if __name__ == '__main__':
     neighborhood_files_path = neighborhoods_path()
     print "\n"
 
-    for limit_to, report_dir in zip([500, 1000, 1000000], ['top_500','top_1000','all']):
+    # for limit_to, report_dir in zip([500, 1000, 1000000], ['top_500','top_1000','all']):
+    #     print "Limit_to:", limit_to
+    #     print
+    #     generate_plots(limit_to, report_dir, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path)
+    #     print '\t\tDone'
+    #     print "------------------------\n\n"
+
+
+    data_path = os.path.join(gv.project_data_path,'Archea/pickle/')
+
+    for limit_to in [10000, 1000000]:
+
         print "Limit_to:", limit_to
         print
-        generate_plots(limit_to, report_dir, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path)
-        print '\t\tDone'
-        print "------------------------\n\n"
+        cur_path = os.path.join(data_path, str(limit_to))
+        generate_pickles(cur_path, limit_to)
+        print 'Done'
+        print "------------------------"
