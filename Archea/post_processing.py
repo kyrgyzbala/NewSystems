@@ -91,18 +91,18 @@ def generate_pickles(save_path, limit_to):
     duplets = merging.merge_kplets_within_orders_iterative(duplets)
 
     print 'Starting accross mergings'
-    triplets, duplets = merging.merge_kplets_across_order(triplets, duplets)
-    quadruplets, triplets = merging.merge_kplets_across_order(quadruplets, triplets)
-    pentaplets, quadruplets = merging.merge_kplets_across_order(pentaplets, quadruplets)
+    triplets, duplets = merging.merge_kplets_across_orders(triplets, duplets)
+    quadruplets, triplets = merging.merge_kplets_across_orders(quadruplets, triplets)
+    pentaplets, quadruplets = merging.merge_kplets_across_orders(pentaplets, quadruplets)
 
     print 'Dumping to files'
-    dump_file = bz2.BZ2File('pentaplets_merged_across.p.bz2', 'w')
+    dump_file = bz2.BZ2File(os.path.join(save_path, 'pentaplets_merged_across.p.bz2'), 'w')
     pickle.dump(pentaplets, dump_file)
-    dump_file = bz2.BZ2File('quadruplets_merged_across.p.bz2', 'w')
+    dump_file = bz2.BZ2File(os.path.join(save_path, 'quadruplets_merged_across.p.bz2'), 'w')
     pickle.dump(quadruplets, dump_file)
-    dump_file = bz2.BZ2File('triplets_merged_across.p.bz2', 'w')
+    dump_file = bz2.BZ2File(os.path.join(save_path, 'triplets_merged_across.p.bz2'), 'w')
     pickle.dump(triplets, dump_file)
-    dump_file = bz2.BZ2File('duplets_merged_across.p.bz2', 'w')
+    dump_file = bz2.BZ2File(os.path.join(save_path, 'duplets_merged_across.p.bz2'), 'w')
     pickle.dump(duplets, dump_file)
 
     print 'Done for limit_to:', limit_to

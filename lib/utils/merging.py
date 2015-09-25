@@ -135,7 +135,7 @@ def merge_kplets_within_orders_iterative(kplets):
 
             new_merged_kplets.append(outer_list + to_move)
 
-        print cnt, len(merged_kplets), len(new_merged_kplets), "Communities:", " ".join([str(len(l)) for l in merged_kplets])
+        print cnt, len(merged_kplets), len(new_merged_kplets)#, "Communities:", " ".join([str(len(l)) for l in merged_kplets])
         cnt += 1
 
         if len(merged_kplets) == len(new_merged_kplets):
