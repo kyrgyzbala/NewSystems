@@ -63,8 +63,8 @@ def basic_merge_within_orders(kplets):
     merged_out = [0 for _ in range(len(kplets))]
 
     for i in range(len(kplets)):
-        if i % 1000 == 0:
-            print i
+        # if i % 1000 == 0:
+        #     print i
         if merged_out[i] == 1:
             continue
         outer_kplet = kplets[i]
@@ -82,7 +82,6 @@ def basic_merge_within_orders(kplets):
     return merged_kplets
 
 
-
 def merge_kplets_within_orders_iterative(kplets):
     """ Merge the kplets of same size, if they carry similarity in composition. Return list.
 
@@ -97,7 +96,7 @@ def merge_kplets_within_orders_iterative(kplets):
     # Iterate the merging procedure until it converges
     cnt = 1
     while True:
-        merged_out = [0 for i in range(len(merged_kplets))]
+        merged_out = [0 for _ in range(len(merged_kplets))]
         # A list for representing the merged kplets' lists in terms of profile codes
         # communities = []
         # for merged_list in merged_kplets:
@@ -155,7 +154,7 @@ def merge_kplets_within_orders(kplets, target_profiles):
     # First round of merging
 
     merged_kplets = []
-    merged_out = [0 for i in range(len(kplets))]
+    merged_out = [0 for _ in range(len(kplets))]
 
     for i in range(len(kplets)):
         if merged_out[i] == 1:
@@ -178,7 +177,7 @@ def merge_kplets_within_orders(kplets, target_profiles):
     del merged_out
 
     merged_communities = []
-    merged_out = [0 for i in range(len(merged_kplets))]
+    merged_out = [0 for _ in range(len(merged_kplets))]
 
     # A list for representing the merged kplets' lists in terms of target and community profiles
     merged_list_profiles = []
@@ -233,7 +232,7 @@ def merge_kplets_within_orders(kplets, target_profiles):
     # Third round of merging
 
     merged_communities_2 = []
-    merged_out = [0 for i in range(len(merged_communities))]
+    merged_out = [0 for _ in range(len(merged_communities))]
 
     merged_list_profiles = []
 
@@ -269,7 +268,7 @@ def merge_kplets_within_orders(kplets, target_profiles):
     # Fourth round of merging
 
     merged_communities_2 = []
-    merged_out = [0 for i in range(len(merged_communities))]
+    merged_out = [0 for _ in range(len(merged_communities))]
 
     merged_list_profiles = []
 
@@ -306,7 +305,7 @@ def merge_kplets_within_orders(kplets, target_profiles):
     merged_communities = merged_communities_2
 
     merged_communities_2 = []
-    merged_out = [0 for i in range(len(merged_communities))]
+    merged_out = [0 for _ in range(len(merged_communities))]
 
     merged_list_profiles = []
 
@@ -338,30 +337,29 @@ def merge_kplets_within_orders(kplets, target_profiles):
         merged_communities_2.append(outer_list + to_move)
     len_5 = len(merged_communities_2)
 
-
     print 'Reduction pattern:', len_1, len_2, len_3, len_4, len_5
     return merged_communities_2
 
 
-def merge_kplets_across_order(superplets_pool, subplets_pool):
+def merge_kplets_across_orders(superplets_pool, subplets_pool):
     """ Merge kplets of different size.
 
     Input arguments:
     superplets -- higher level kplets
-    subplets -- lower level kplets.
+    subplets -- lower level kplets
 
     In case of pentaplets and quadruplets, merge out the quadruplets into the pentaplets, if it happens to be a
     supbset of any pentaplet.
     """
 
-    superplet_codes = []
+    superplet_gi_pool = []
     for superplet_list in superplets_pool:
-        tmp_codes = set([])
+        tmp_gi_list = set([])
         for kplet in superplet_list:
-            tmp_codes.update(kplet.codes)
-        superplet_codes.append(tmp_codes)
+            tmp_gi_list.update(kplet.gids)
+        superplet_gi_pool.append(tmp_gi_list)
 
-    assert len(superplet_codes) == len(superplets_pool)
+    assert len(superplet_gi_pool) == len(superplets_pool)
 
     merged_out = [[0]*len(subplets_list) for subplets_list in subplets_pool]
 
@@ -373,7 +371,7 @@ def merge_kplets_across_order(superplets_pool, subplets_pool):
 
             for superplet_ind in range(len(superplets_pool)):
 
-                if cur_subplet.codes.issubset(superplet_codes[superplet_ind]):
+                if cur_subplet.gids.issubset(superplet_gi_pool[superplet_ind]):
                     superplets_pool[superplet_ind].append(cur_subplet)
                     merged_out[subplet_outer_ind][subplet_inner_ind] = 1
                     break
@@ -381,4 +379,4 @@ def merge_kplets_across_order(superplets_pool, subplets_pool):
     subplets_pool = [[subplet_list[i] for i in range(len(subplet_list)) if not merged_out[cnt][i]] for cnt, subplet_list in enumerate(subplets_pool)]
     subplets_pool = [l for l in subplets_pool if l]
 
-    return  superplets_pool, subplets_pool
+    return superplets_pool, subplets_pool

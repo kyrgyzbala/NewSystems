@@ -23,6 +23,7 @@ from lib.utils import reporting as r
 import lib.utils.merging as merging
 import lib.utils.tools as t
 import pickle
+import bz2
 
 
 def generate_plots(limit_to, report_dir, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path):
@@ -83,15 +84,31 @@ def generate_pickles(save_path, limit_to):
     triplets = tr.get_report_kplets(limit_to=limit_to, load_locations=True)
     duplets = d.get_report_kplets(limit_to=limit_to, load_locations=True)
 
-    pentaplets = merging.basic_merge_within_orders(pentaplets)
-    quadruplets = merging.basic_merge_within_orders(quadruplets)
-    triplets = merging.basic_merge_within_orders(triplets)
-    duplets = merging.basic_merge_within_orders(duplets)
+    print 'Starting within mergings'
+    pentaplets = merging.merge_kplets_within_orders_iterative(pentaplets)
+    quadruplets = merging.merge_kplets_within_orders_iterative(quadruplets)
+    triplets = merging.merge_kplets_within_orders_iterative(triplets)
+    duplets = merging.merge_kplets_within_orders_iterative(duplets)
 
-    pickle.dump(pentaplets, open(os.path.join(save_path, 'pentaplets.p'), 'w'))
-    pickle.dump(quadruplets, open(os.path.join(save_path, 'quadruplets.p'), 'w'))
-    pickle.dump(triplets, open(os.path.join(save_path, 'triplets.p'), 'w'))
-    pickle.dump(duplets, open(os.path.join(save_path, 'duplets.p'), 'w'))
+    print 'Starting accross mergings'
+    triplets, duplets = merging.merge_kplets_across_order(triplets, duplets)
+    quadruplets, triplets = merging.merge_kplets_across_order(quadruplets, triplets)
+    pentaplets, quadruplets = merging.merge_kplets_across_order(pentaplets, quadruplets)
+
+    print 'Dumping to files'
+    dump_file = bz2.BZ2File('pentaplets_merged_across.p.bz2', 'w')
+    pickle.dump(pentaplets, dump_file)
+    dump_file = bz2.BZ2File('quadruplets_merged_across.p.bz2', 'w')
+    pickle.dump(quadruplets, dump_file)
+    dump_file = bz2.BZ2File('triplets_merged_across.p.bz2', 'w')
+    pickle.dump(triplets, dump_file)
+    dump_file = bz2.BZ2File('duplets_merged_across.p.bz2', 'w')
+    pickle.dump(duplets, dump_file)
+
+    print 'Done for limit_to:', limit_to
+    print
+    print
+
 
 
 if __name__ == '__main__':
@@ -107,11 +124,10 @@ if __name__ == '__main__':
     #     print "Limit_to:", limit_to
     #     print
     #     generate_plots(limit_to, report_dir, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path)
-    #     print '\t\tDone'
+    #     print '\t\t Done'
     #     print "------------------------\n\n"
 
-
-    data_path = os.path.join(gv.project_data_path,'Archea/pickle/')
+    data_path = os.path.join(gv.project_data_path, 'Archea/pickle/')
 
     for limit_to in [10000, 1000000]:
 
