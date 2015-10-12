@@ -11,29 +11,37 @@ import global_variables as gv
 import os
 from lib.utils import classes as cl
 from operator import itemgetter
+import cPickle
+import bz2
 
 
 def target_profiles():
+
     profiles_file = os.path.join(gv.project_data_path, 'Archea/arCOG/selected_arcogs.txt')
     return [l.strip() for l in open(profiles_file).readlines()]
 
 def bacteria_target_profiles():
+
     profiles_file = os.path.join(gv.project_data_path, 'Bacteria/CDD/profile_ids.txt')
     return [l.strip() for l in open(profiles_file).readlines()]
 
 
 def map_src2org():
+
     return {l.split()[1]:l.split()[0] for l in open(os.path.join(gv.data_path, 'info', 'map_gnm_src.txt')).readlines()}
 
 
 def map_genome2weight():
+
     return {l.split()[0] : float(l.split()[1]) for l in open(os.path.join(gv.data_path, 'CDD', 'Prok1402_ad.weight.tab')).readlines()}
 
 
 def map_profile2def():
+
     def_map = {l.split('\t')[0]: l.split('\t')[3] for l in open(os.path.join(gv.data_path, 'Archea/arCOG/ar14.arCOGdef.tab')).readlines()}
     def_map["-"] = " "
     return def_map
+
 
 def map_cdd_profile2def():
     def_map = {l.split('\t')[1]: l.split('\t')[3] for l in open(os.path.join(gv.data_path, 'CDD/cdfind_pub_ad.dat')).readlines()}
@@ -41,11 +49,20 @@ def map_cdd_profile2def():
     return def_map
 
 
+def map_profile2class():
+
+    _profile2class = { l.split('\t')[0]: l.split('\t')[1] for l in open(os.path.join(gv.data_path, 'Archea/arCOG/ar14.arCOGdef.tab')).readlines()}
+    _class2def = { l.split('\t')[0]: l.split('\t')[2] for l in open(os.path.join(gv.data_path, 'funclass.tab')) }
+    return {k:_class2def[v] for k,v in _profile2class.items()}
+
+
 def map_genome2weight():
+
     return {l.split()[0]: float(l.split()[1]) for l in open(os.path.join(gv.data_path, 'CDD', 'Prok1402_ad.weight.tab')).readlines()}
 
 
 def map_gid2src(map_file):
+
     out_map = {}
     with open(map_file) as f:
         for l in f:
@@ -58,6 +75,7 @@ def map_gid2src(map_file):
 
 
 def map_gid2cdd():
+
     cdd_map = {}
     for l in open(os.path.join(gv.data_path, 'CDD', 'all_Prok1402.ccp.csv')):
         terms = l.split(',')
@@ -72,10 +90,12 @@ def map_gid2cdd():
 
 
 def map_gid2arcog():
+
     return {l.split(',')[0]: l.split(',')[6] for l in open(os.path.join(gv.data_path, 'Archea/arCOG/ar14.arCOG.csv')).readlines() if 'arCOG' in l}
 
 
 def map_gid2arcog_cdd():
+
     _gid2arcog = map_gid2arcog()
     _gid2cdd = map_gid2cdd()
 
@@ -127,6 +147,27 @@ def load_neighborhoods(path, target_files=None):
         files= [os.path.join(path, f) for f in target_files]
 
     return [cl.Neighborhood(f) for f in files]
+
+
+def load_compressed_pickle(fname, compression='bz2'):
+
+    if isinstance(fname, str) and compression == 'bz2':
+        f = bz2.BZ2File(fname, 'rb')
+        retval = cPickle.load(f)
+    else:
+        raise NotImplementedError
+    return retval
+
+
+def dump_compressed_pickle(fname, data, compression='bz2'):
+
+    if isinstance(fname, str) and compression == 'bz2':
+        f = bz2.BZ2File(fname, 'wb')
+        cPickle.dump(data, f)
+    else:
+        raise NotImplementedError
+
+
 
 
 if __name__=='__main__':

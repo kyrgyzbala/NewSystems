@@ -3,6 +3,8 @@ __author__ = 'Sanjarbek Hudaiberdiev'
 from lib.utils import tools as t
 from lib.db.archea import neighborhoods_path
 _neighborhoods_path = neighborhoods_path()
+from lib.utils.classes import NeighborhoodFileSummary, Neighborhood
+import os
 import sys
 
 
@@ -145,202 +147,6 @@ def merge_kplets_within_orders_iterative(kplets):
     return merged_kplets
 
 
-def merge_kplets_within_orders(kplets, target_profiles):
-    """ Merge the kplets of same size, if they carry similarity in composition. Return list.
-
-    Keyword arguments:
-    kplets -- list of objects of lib.classes.Kplet instances"""
-
-    # First round of merging
-
-    merged_kplets = []
-    merged_out = [0 for _ in range(len(kplets))]
-
-    for i in range(len(kplets)):
-        if merged_out[i] == 1:
-            continue
-        outer_kplet = kplets[i]
-        to_move = []
-        for j in range(i+1, len(kplets)):
-            if merged_out[j] == 1:
-                continue
-            inner_kplet = kplets[j]
-
-            if _similar_same_order(outer_kplet, inner_kplet):
-                to_move.append(inner_kplet)
-                merged_out[j] = 1
-        merged_kplets.append([outer_kplet] + to_move)
-    len_1 = len(kplets)
-    # Second round of merging
-
-    del kplets
-    del merged_out
-
-    merged_communities = []
-    merged_out = [0 for _ in range(len(merged_kplets))]
-
-    # A list for representing the merged kplets' lists in terms of target and community profiles
-    merged_list_profiles = []
-
-    for merged_list in merged_kplets:
-
-        tmp_target_profiles, tmp_community_profiles = set([]), set([])
-        for kplet in merged_list:
-            tmp_target_profiles.update(set([profile for profile in kplet.codes if profile in target_profiles]))
-            tmp_community_profiles.update(set([profile for profile in kplet.codes if profile not in target_profiles]))
-
-        merged_list_profiles.append([tmp_target_profiles, tmp_community_profiles])
-
-    del merged_list
-    assert len(merged_list_profiles) == len(merged_kplets)
-
-    for i in range(len(merged_kplets)):
-        if merged_out[i] == 1:
-            continue
-
-        outer_list = merged_kplets[i]
-        outer_target_profiles = merged_list_profiles[i][0]
-        outer_community_profiles = merged_list_profiles[i][1]
-        to_move = []
-
-        for j in range(i+1, len(merged_kplets)):
-            if merged_out[j] == 1:
-                continue
-
-            inner_list = merged_kplets[j]
-            inner_target_profiles = merged_list_profiles[j][0]
-            inner_community_profiles = merged_list_profiles[j][1]
-
-            union = inner_community_profiles.union(outer_community_profiles)
-            common = inner_community_profiles.intersection(outer_community_profiles)
-
-            if not outer_target_profiles or not inner_target_profiles:
-                if float(len(common))/len(union) > 0.7:
-                    to_move += inner_list
-                    merged_out[j] = 1
-
-            # For majority of cases, when kplet includes a target profile
-            elif outer_target_profiles == inner_target_profiles:
-                # When target profiles match, the rest can be selected with lose threshold
-                if float(len(common)) / len(union) >= 0.5:
-                    to_move += inner_list
-                    merged_out[j] = 1
-
-        merged_communities.append(outer_list + to_move)
-    len_2 = len(merged_communities)
-
-    # Third round of merging
-
-    merged_communities_2 = []
-    merged_out = [0 for _ in range(len(merged_communities))]
-
-    merged_list_profiles = []
-
-    for merged_list in merged_communities:
-        merged_list_profiles.append(set([code for code in kplet.codes for kplet in merged_list]))
-
-    for i in range(len(merged_communities)):
-        if merged_out[i] == 1:
-            continue
-        to_move = []
-        outer_community = merged_list_profiles[i]
-        outer_list = merged_communities[i]
-
-        for j in range(i+1, len(merged_communities)):
-            if merged_out[j] == 1:
-                continue
-            inner_community = merged_list_profiles[j]
-            inner_list = merged_communities[j]
-
-            smaller = min(inner_community, outer_community, key=len)
-            common = inner_community.intersection(outer_community)
-            if not common:
-                continue
-
-            if float(len(common))/len(smaller) >= 0.7:
-                to_move += inner_list
-                merged_out[j] = 1
-
-        merged_communities_2.append(outer_list + to_move)
-
-    merged_communities = merged_communities_2
-    len_3 = len(merged_communities)
-    # Fourth round of merging
-
-    merged_communities_2 = []
-    merged_out = [0 for _ in range(len(merged_communities))]
-
-    merged_list_profiles = []
-
-    for merged_list in merged_communities:
-        merged_list_profiles.append(set([code for code in kplet.codes for kplet in merged_list]))
-
-    for i in range(len(merged_communities)):
-        if merged_out[i] == 1:
-            continue
-        to_move = []
-        outer_community = merged_list_profiles[i]
-        outer_list = merged_communities[i]
-
-        for j in range(i+1, len(merged_communities)):
-            if merged_out[j] == 1:
-                continue
-            inner_community = merged_list_profiles[j]
-            inner_list = merged_communities[j]
-
-            smaller = min(inner_community, outer_community, key=len)
-            common = inner_community.intersection(outer_community)
-            if not common:
-                continue
-
-            if float(len(common))/len(smaller) >= 0.7:
-                to_move += inner_list
-                merged_out[j] = 1
-
-        merged_communities_2.append(outer_list + to_move)
-    len_4 = len(merged_communities_2)
-
-    # Fifth round
-
-    merged_communities = merged_communities_2
-
-    merged_communities_2 = []
-    merged_out = [0 for _ in range(len(merged_communities))]
-
-    merged_list_profiles = []
-
-    for merged_list in merged_communities:
-        merged_list_profiles.append(set([code for code in kplet.codes for kplet in merged_list]))
-
-    for i in range(len(merged_communities)):
-        if merged_out[i] == 1:
-            continue
-        to_move = []
-        outer_community = merged_list_profiles[i]
-        outer_list = merged_communities[i]
-
-        for j in range(i+1, len(merged_communities)):
-            if merged_out[j] == 1:
-                continue
-            inner_community = merged_list_profiles[j]
-            inner_list = merged_communities[j]
-
-            smaller = min(inner_community, outer_community, key=len)
-            common = inner_community.intersection(outer_community)
-            if not common:
-                continue
-
-            if float(len(common))/len(smaller) >= 0.7:
-                to_move += inner_list
-                merged_out[j] = 1
-
-        merged_communities_2.append(outer_list + to_move)
-    len_5 = len(merged_communities_2)
-
-    print 'Reduction pattern:', len_1, len_2, len_3, len_4, len_5
-    return merged_communities_2
-
-
 def merge_kplets_across_orders(superplets_pool, subplets_pool):
     """ Merge kplets of different size.
 
@@ -380,3 +186,60 @@ def merge_kplets_across_orders(superplets_pool, subplets_pool):
     subplets_pool = [l for l in subplets_pool if l]
 
     return superplets_pool, subplets_pool
+
+
+def merge_into_file_summaries(kplets, neighborhood_files_path, file2src_src2org_map, data_type='bacteria'):
+
+    _file2kplets = {}
+    for kplet in kplets:
+        for f in kplet.files:
+            if f in _file2kplets:
+                _file2kplets[f].append(kplet)
+            else:
+                _file2kplets[f] = [kplet]
+
+    kplet_files = _file2kplets.keys()
+    _file2src, _src2org = file2src_src2org_map(kplet_files)
+
+    file_summaries = []
+    for f in kplet_files:
+        _neighborhood = Neighborhood(os.path.join(neighborhood_files_path, f))
+        _src = _file2src[f]
+        _org = _src2org[_src]
+        kplets = _file2kplets[f]
+        file_summaries.append(NeighborhoodFileSummary(f, kplets, _neighborhood, _org, _src))
+
+    file_summaries = trim_file_summary_list(file_summaries, data_type)
+    file_summaries = [fs for fs in file_summaries if fs]
+
+    file_summaries.sort(reverse=True)
+
+    community = set()
+    for fs in file_summaries:
+        [community.update(kplet.codes) for kplet in fs.kplets]
+
+    community_count = {}
+
+    for i in range(len(file_summaries)):
+        cur_file_summary = file_summaries[i]
+        for gene in cur_file_summary.neighborhood.genes:
+            # Considering only the genes considered for kplet searches
+            if gene.tag == 'flank':
+                continue
+            for k in gene.cogid.split():
+                if k in community_count:
+                    community_count[k] += 1
+                else:
+                    community_count[k] = 1
+
+    return _src2org, file_summaries, community, community_count
+
+
+def trim_file_summary_list(file_summaries, data_type='bacteria'):
+
+    if data_type == 'bacteria':
+        return [ c for c in file_summaries if len(c.kplets) > 20 ]
+    elif data_type == 'archaea':
+        return [ c for c in file_summaries if len(c.kplets) > 10 ]
+    else:
+        raise NotImplementedError

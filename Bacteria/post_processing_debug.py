@@ -21,6 +21,7 @@ from lib.db.bacteria.db_tools import file2src_src2org_map
 import lib.utils.merging as merging
 import lib.utils.tools as t
 import lib.utils.reporting as r
+import numpy as np
 
 
 def generate_plots(limit_to, report_dir, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path, profile_id2code):
@@ -72,8 +73,9 @@ def generate_plots(limit_to, report_dir, target_profiles, profile2def, gid2arcog
 
 
 if __name__ == '__main__':
-    import time
-    import pickle
+
+    import cPickle
+    import bz2
 
     print 'Pre-Loading dictionaries'
     target_profiles = t.bacteria_target_profiles()
@@ -82,19 +84,19 @@ if __name__ == '__main__':
     neighborhood_files_path = neighborhoods_path()
     # profile_id2code = map_id2cdd()
     # pickle.dump(profile_id2code, open('profile_id2code.p','w'))
-    profile_id2code = pickle.load(open('/Users/hudaiber/Projects/NewSystems/code/Bacteria/profile_id2code.p'))
+    profile_id2code = cPickle.load(open('/Users/hudaiber/Projects/NewSystems/code/Bacteria/profile_id2code.p'))
 
-    pentaplets = pickle.load(open('/Users/hudaiber/Projects/NewSystems/data/Bacteria/pickle/100000/pentaplets.p'))
+    fname = '/Users/hudaiber/Projects/NewSystems/data/Bacteria/pickle/100000/pentaplets_merged_across.p.bz2'
+    f = bz2.BZ2File(fname, 'rb')
 
+    buffer = ""
+    while 1:
+        data = f.read()
+        if data == "":
+            break
+        buffer += data
 
-
-
-
-
-
-
-
-
+    pentaplets_prel_merg = cPickle.loads(buffer)
 
     sys.exit()
 
@@ -110,13 +112,29 @@ if __name__ == '__main__':
     # print 'Pentaplet 100000 db load time', time.time() - tic
     # pickle.dump(pentaplets, open('bacteria_pentaplet_100K.p', 'w'))
 
-    pentaplets = pickle.load(open('/Users/hudaiber/Projects/NewSystems/data/Bacteria/pickle/100000/pentaplets.p'))
+    pentaplets = cPickle.load(open('/Users/hudaiber/Projects/NewSystems/data/Bacteria/pickle/100000/pentaplets.p'))
     kplets = pentaplets
 
     # from merging module
     # __________________
 
+    # Maybe for heatmap kind of green for community members
+    community = {}
+    for kplet in kplets[0]:
+        for code in kplet.codes:
+            if code in community:
+                community[code] += 1
+            else:
+                community[code] = 1
 
+    labels = np.asarray(community.keys())
+    counts = np.asarray(community.values())
+
+    sorted_args = np.argsort(counts)[::-1]
+    print counts[sorted_args]
+
+    # End of block for heatmap kind of coloring community members
+    dump_compressed_pickle()
     profiles = {}
     for kplet in merged_kplets[0]:
         for code in kplet.codes:
@@ -125,14 +143,31 @@ if __name__ == '__main__':
                     profiles[code] += 1
                 else:
                     profiles[code] = 1
-
+    fname = '/Users/hudaiber/Projects/NewSystems/data/Bacteria/pickle/100000/merged_kplets.p.bz2'
 
     dest_dir = '/Users/hudaiber/Projects/NewSystems/data/Bacteria/reports/tmp/'
 
     for cnt, kplet_sublist in enumerate(merged_kplets):
         print cnt+1
         xls_file_name = os.path.join(dest_dir,  "%d.xls" % (cnt+1))
-        r.write_to_xls(xls_file_name,kplet_sublist,target_profiles,profile2def,gid2arcog_cdd,neighborhood_files_path,file2src_src2org_map)
+        src2org, file_summaries, community, community_count = merging.merge_into_file_summaries(kplet_sublist, neighborhood_files_path, file2src_src2org_map)
+
+        params = {}
+
+        params['xls_file_name'] = xls_file_name
+        params['src2org'] = src2org
+        params['file_summaries'] = file_summaries
+        params['community'] = community
+        params['target_profiles'] = target_profiles
+        params['profile2def'] = profile2def
+        params['gid2arcog_cdd'] = gid2arcog_cdd
+
+        r.write_to_xls(params)
         if cnt == 200:
             break
 
+
+    filtered_merged_kplets = []
+
+    fname = '/Users/hudaiber/Projects/NewSystems/data/Bacteria/pickle/100000/pentaplets_community_count.p.bz2'
+    pp_com_cnt = t.load_compressed_pickle(fname)

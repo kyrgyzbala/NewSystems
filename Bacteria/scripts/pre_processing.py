@@ -15,8 +15,8 @@ inter_dist = 10
 def build_src2gids_map(sources_path, result_file_prefix):
 
     src_to_gids = {}
-    cnt=0
-    t=time.time()
+    cnt = 0
+    t = time.time()
     for f in [l for l in os.listdir(sources_path) if l.endswith('_annot.pty')]:
         tmp_l = open(os.path.join(sources_path, f)).readline()
         cur_gid = f.split('_')[0]
@@ -25,7 +25,7 @@ def build_src2gids_map(sources_path, result_file_prefix):
             src_to_gids[cur_src].append(cur_gid)
         else:
             src_to_gids[cur_src] = [cur_gid]
-        cnt+=1
+        cnt += 1
         if cnt%10000==0:
             print 'Processed: %d, Time: %f' % (cnt, time.time()-t)
             t=time.time()

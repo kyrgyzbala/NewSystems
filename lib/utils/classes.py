@@ -90,7 +90,12 @@ class Kplet(object):
 
 
 class NeighborhoodFileSummary(object):
+
     def __init__(self, file_name, kplets, neighborhood, org, src):
+        """Class for keeping summery information for a file. Keeps account of kplets (and related information for
+        that kplet) found in current file.
+        Default sorting is carried by total weights"""
+
         self.file_name = file_name
         self.kplets = kplets
         self.neighborhood = neighborhood
