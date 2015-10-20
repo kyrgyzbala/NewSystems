@@ -94,17 +94,22 @@ def generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2de
         os.mkdir(report_files_dir)
 
     for i, kplet_pool in zip([5, 4, 3, 2], [pentaplets, quadruplets, triplets, duplets]):
-        for j, kplet_sublist in enumerate(kplet_pool):
+        j = 0
+        for kplet_sublist in kplet_pool:
             cur_reports_folder = os.path.join(report_files_dir, str(i))
             if not os.path.exists(cur_reports_folder):
                 os.mkdir(cur_reports_folder)
-            xls_file_name = os.path.join(cur_reports_folder,  "%d_%d.xls" % (j+1, i))
 
             src2org, file_summaries, community, community_count = merging.merge_into_file_summaries(kplet_sublist,
                                                                                    neighborhood_files_path,
                                                                                    file2src_src2org_map,
                                                                                    'archaea')
-            params = {}
+            if not src2org:
+                continue
+
+            xls_file_name = os.path.join(cur_reports_folder,  "%d_%d.xls" % (j+1, i))
+            j += 1
+            params = dict()
             params['xls_file_name'] = xls_file_name
             params['src2org'] = src2org
             params['file_summaries'] = file_summaries
@@ -162,15 +167,24 @@ def get_profiles_counts(data_path):
 
         print 'Counting community'
         community_count_pool = []
+        community_count_pool_with_flanks = []
         for kplets in kplets_pool:
-            a, b, c, community_count = merging.merge_into_file_summaries(kplets,
+            a, b, c, community_count, community_count_with_flanks = merging.merge_into_file_summaries(kplets,
                                                                          neighborhood_files_path,
                                                                          file2src_src2org_map)
+            if not a:
+                continue
             community_count_pool.append(community_count)
+            community_count_pool_with_flanks.append(community_count_with_flanks)
 
         dump_file_name = os.path.join(data_path, '%s_community_count.p.bz2'%file_name)
         print 'Dumping into', dump_file_name
         t.dump_compressed_pickle(dump_file_name, community_count_pool)
+
+        dump_file_name = os.path.join(data_path, '%s_community_count_with_flanks.p.bz2'%file_name)
+        print 'Dumping into', dump_file_name
+        t.dump_compressed_pickle(dump_file_name, community_count_pool_with_flanks)
+
         print
         print
 
@@ -193,15 +207,14 @@ if __name__ == '__main__':
         print '\t\t Done'
         print "------------------------\n\n"
 
-    # data_path = os.path.join(gv.project_data_path, 'Archea/pickle/')
-    #
-    # for limit_to in ['1000000']:
-    #
-    #     print "Limit_to:", limit_to
-    #     print
-    #     cur_path = os.path.join(data_path, str(limit_to))
-    #     # generate_pickles(cur_path, limit_to)
-    #     get_profiles_counts(cur_path)
-    #     print 'Done'
-    #     print "------------------------"
-    #
+    data_path = os.path.join(gv.project_data_path, 'Archea/pickle/')
+
+    for limit_to in ['1000000']:
+
+        print "Limit_to:", limit_to
+        print
+        cur_path = os.path.join(data_path, str(limit_to))
+        # generate_pickles(cur_path, limit_to)
+        get_profiles_counts(cur_path)
+        print 'Done'
+        print "------------------------"

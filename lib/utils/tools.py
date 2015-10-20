@@ -44,6 +44,7 @@ def map_profile2def():
 
 
 def map_cdd_profile2def():
+
     def_map = {l.split('\t')[1]: l.split('\t')[3] for l in open(os.path.join(gv.data_path, 'CDD/cdfind_pub_ad.dat')).readlines()}
     def_map["-"] = " "
     return def_map
@@ -52,8 +53,8 @@ def map_cdd_profile2def():
 def map_profile2class():
 
     _profile2class = { l.split('\t')[0]: l.split('\t')[1] for l in open(os.path.join(gv.data_path, 'Archea/arCOG/ar14.arCOGdef.tab')).readlines()}
-    _class2def = { l.split('\t')[0]: l.split('\t')[2] for l in open(os.path.join(gv.data_path, 'funclass.tab')) }
-    return {k:_class2def[v] for k,v in _profile2class.items()}
+    _class2def = { l.split('\t')[0]: l.split('\t')[2].strip() for l in open(os.path.join(gv.data_path, 'Archea/arCOG/ar14/funclass.tab')) }
+    return {k:_class2def[v] for k,v in _profile2class.items() if v in _class2def}
 
 
 def map_genome2weight():
@@ -166,8 +167,6 @@ def dump_compressed_pickle(fname, data, compression='bz2'):
         cPickle.dump(data, f)
     else:
         raise NotImplementedError
-
-
 
 
 if __name__=='__main__':

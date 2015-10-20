@@ -188,6 +188,13 @@ def merge_kplets_across_orders(superplets_pool, subplets_pool):
     return superplets_pool, subplets_pool
 
 
+def update_dictionary(map, key, value):
+    if key in map:
+        map[key] += value
+    else:
+        map[key] = value
+
+
 def merge_into_file_summaries(kplets, neighborhood_files_path, file2src_src2org_map, data_type='bacteria'):
 
     _file2kplets = {}
@@ -211,28 +218,36 @@ def merge_into_file_summaries(kplets, neighborhood_files_path, file2src_src2org_
 
     file_summaries = trim_file_summary_list(file_summaries, data_type)
     file_summaries = [fs for fs in file_summaries if fs]
+    if not file_summaries:
+        return None, None, None, None, None,
 
     file_summaries.sort(reverse=True)
+
+    # Updating the map _file2src after trimming.
+    new_file_list = [ fs.file_name for fs in file_summaries]
+    for _file_name in _file2src.keys():
+        if _file_name not in new_file_list:
+            del _file2src[_file_name]
 
     community = set()
     for fs in file_summaries:
         [community.update(kplet.codes) for kplet in fs.kplets]
 
+    community_count_with_flanks = {}
     community_count = {}
 
     for i in range(len(file_summaries)):
         cur_file_summary = file_summaries[i]
         for gene in cur_file_summary.neighborhood.genes:
-            # Considering only the genes considered for kplet searches
             if gene.tag == 'flank':
-                continue
-            for k in gene.cogid.split():
-                if k in community_count:
-                    community_count[k] += 1
-                else:
-                    community_count[k] = 1
+                for k in gene.cogid.split():
+                    update_dictionary(community_count_with_flanks, k, 1)
+            else:
+                for k in gene.cogid.split():
+                    update_dictionary(community_count_with_flanks, k, 1)
+                    update_dictionary(community_count, k, 1)
 
-    return _src2org, file_summaries, community, community_count
+    return _src2org, file_summaries, community, community_count, community_count_with_flanks
 
 
 def trim_file_summary_list(file_summaries, data_type='bacteria'):
