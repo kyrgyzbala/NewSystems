@@ -63,7 +63,7 @@ def write_to_xls(params):
     worksheet.merge_range(0, 0, 0, 10, 'Community: ' + ' '.join(community), title_format)
     top_border += 1
 
-    organisms = sorted(src2org.values())
+    organisms = sorted(set(src2org.values()))
     worksheet.merge_range(top_border, 0, top_border, 10, 'Organisms: %d'%len(organisms), title_format)
     top_border += 1
 

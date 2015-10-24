@@ -99,9 +99,10 @@ def generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2de
             if not os.path.exists(cur_reports_folder):
                 os.mkdir(cur_reports_folder)
 
-            src2org, file_summaries, community, community_count = merging.merge_into_file_summaries(kplet_sublist,
-                                                                                   neighborhood_files_path,
-                                                                                   file2src_src2org_map)
+            src2org, file_summaries, community, community_count, community_count_with_flanks\
+                = merging.merge_into_file_summaries(kplet_sublist,
+                                                    neighborhood_files_path,
+                                                    file2src_src2org_map)
             if not src2org:
                 continue
 
@@ -202,7 +203,7 @@ if __name__ == '__main__':
 
     data_path = os.path.join(gv.project_data_path,'Bacteria/pickle/')
     print 'Generating community counts'
-    for limit_to in [100000]:
+    for limit_to in [10000 ,100000]:
         print "Limit_to:", limit_to
         print
         cur_path = os.path.join(data_path, str(limit_to))
@@ -217,6 +218,6 @@ if __name__ == '__main__':
     report_dir = 'top_100000'
     print "Limit_to:", limit_to
     print
-    generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path, profile_id2code)
+    generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path)
     print 'Done'
     print "------------------------"

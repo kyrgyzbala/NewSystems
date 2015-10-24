@@ -1,11 +1,20 @@
 __author__ = 'Sanjarbek Hudaiberdiev'
 
+import sys
+if sys.platform=='darwin':
+    sys.path.append('/Users/hudaiber/Projects/SystemFiles/')
+elif sys.platform=='linux2':
+    sys.path.append('/home/hudaiber/Projects/SystemFiles/')
+import global_variables as gv
+
 from lib.utils import tools as t
 from lib.db.archea import neighborhoods_path
-_neighborhoods_path = neighborhoods_path()
 from lib.utils.classes import NeighborhoodFileSummary, Neighborhood
 import os
-import sys
+
+# Globals
+_gid2arcog_cdd = t.map_gid2arcog_cdd()
+_neighborhoods_path = neighborhoods_path()
 
 
 def merge_similar_files(files):
@@ -214,12 +223,13 @@ def merge_into_file_summaries(kplets, neighborhood_files_path, file2src_src2org_
         _src = _file2src[f]
         _org = _src2org[_src]
         kplets = _file2kplets[f]
+        _neighborhood.extend_flanks(10, os.path.join(gv.pty_data_path, _org, "%s.pty" % _src), _gid2arcog_cdd)
         file_summaries.append(NeighborhoodFileSummary(f, kplets, _neighborhood, _org, _src))
 
     file_summaries = trim_file_summary_list(file_summaries, data_type)
     file_summaries = [fs for fs in file_summaries if fs]
-    if not file_summaries:
-        return None, None, None, None, None,
+    if len(file_summaries) < 2:
+        return None, None, None, None, None
 
     file_summaries.sort(reverse=True)
 

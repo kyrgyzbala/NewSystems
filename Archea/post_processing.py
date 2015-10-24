@@ -100,14 +100,17 @@ def generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2de
             if not os.path.exists(cur_reports_folder):
                 os.mkdir(cur_reports_folder)
 
-            src2org, file_summaries, community, community_count = merging.merge_into_file_summaries(kplet_sublist,
-                                                                                   neighborhood_files_path,
-                                                                                   file2src_src2org_map,
-                                                                                   'archaea')
+            src2org, file_summaries, community, community_count, community_count_with_flanks = \
+                merging.merge_into_file_summaries(kplet_sublist,
+                                                  neighborhood_files_path,
+                                                  file2src_src2org_map,
+                                                  'archaea')
             if not src2org:
                 continue
 
             xls_file_name = os.path.join(cur_reports_folder,  "%d_%d.xls" % (j+1, i))
+            community_file = os.path.join(cur_reports_folder,  "%d_%d_community.p.bz2" % (j+1, i))
+            community_flank_file = os.path.join(cur_reports_folder,  "%d_%d_community_flank.p.bz2" % (j+1, i))
             j += 1
             params = dict()
             params['xls_file_name'] = xls_file_name
@@ -118,6 +121,9 @@ def generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2de
             params['profile2def'] = profile2def
             params['gid2arcog_cdd'] = gid2arcog_cdd
             r.write_to_xls(params)
+
+            t.dump_compressed_pickle(community_file, community_count)
+            t.dump_compressed_pickle(community_flank_file, community_count_with_flanks)
 
 
 def generate_pickles(save_path, limit_to):
@@ -157,7 +163,8 @@ def generate_pickles(save_path, limit_to):
 
 
 def get_profiles_counts(data_path):
-    file_names = ['pentaplets', 'quadruplets', 'triplets', 'duplets']
+    # file_names = ['pentaplets', 'quadruplets', 'triplets', 'duplets']
+    file_names = ['duplets', 'triplets', 'quadruplets', 'pentaplets']
     print 'Reading merged kplet files'
 
     for file_name in file_names:
@@ -189,8 +196,6 @@ def get_profiles_counts(data_path):
         print
 
 
-
-
 if __name__ == '__main__':
 
     print 'Pre-Loading dictionaries'
@@ -200,16 +205,18 @@ if __name__ == '__main__':
     neighborhood_files_path = neighborhoods_path()
     print "\n"
 
-    for limit_to, report_dir in zip([10000, 1000000], ['top_10000','all']):
+    data_path = os.path.join(gv.project_data_path, 'Archea/pickle/')
+
+    for limit_to, report_dir in zip([1000000], ['all']):
         print "Limit_to:", limit_to
         print
         generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path)
         print '\t\t Done'
         print "------------------------\n\n"
 
-    data_path = os.path.join(gv.project_data_path, 'Archea/pickle/')
+    sys.exit()
 
-    for limit_to in ['1000000']:
+    for limit_to in [10000, 1000000]:
 
         print "Limit_to:", limit_to
         print
@@ -218,3 +225,4 @@ if __name__ == '__main__':
         get_profiles_counts(cur_path)
         print 'Done'
         print "------------------------"
+
