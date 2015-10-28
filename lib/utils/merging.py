@@ -260,6 +260,46 @@ def merge_into_file_summaries(kplets, neighborhood_files_path, file2src_src2org_
     return _src2org, file_summaries, community, community_count, community_count_with_flanks
 
 
+def arcog_profiles_pool_into_classes_pool(profile_community):
+
+    _arcog2class = t.map_arcog2class()
+    class_community = list()
+
+    for profiles in profile_community:
+        classes = dict()
+        for k in profiles:
+            if k in _arcog2class:
+                update_dictionary(classes, _arcog2class[k], profiles[k])
+        class_community.append(classes)
+    return class_community
+
+
+def arcog_profile_count_into_class_count(community_count):
+
+    _arcog2class = t.map_arcog2class()
+    class_count = dict()
+    for k in community_count:
+        if k in _arcog2class:
+            update_dictionary(class_count, _arcog2class[k], community_count[k])
+        else:
+            update_dictionary(class_count, 'Unclassified', community_count[k])
+
+    return class_count
+
+
+def cdd_profile_count_into_class_count(community_count):
+
+    _cdd2class = t.map_cdd2class()
+    class_count = dict()
+    for k in community_count:
+        if k in _cdd2class:
+            update_dictionary(class_count, _cdd2class[k], community_count[k])
+        else:
+            update_dictionary(class_count, 'Unclassified', community_count[k])
+
+    return class_count
+
+
 def trim_file_summary_list(file_summaries, data_type='bacteria'):
 
     if data_type == 'bacteria':

@@ -79,12 +79,13 @@ def generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2de
 
     fname = os.path.join(data_path, str(limit_to), 'pentaplets_merged_across.p.bz2')
     pentaplets = t.load_compressed_pickle(fname)
-    fname = os.path.join(data_path, str(limit_to), 'quadruplets_merged_across.p.bz2')
-    quadruplets = t.load_compressed_pickle(fname)
-    fname = os.path.join(data_path, str(limit_to), 'triplets_merged_across.p.bz2')
-    triplets = t.load_compressed_pickle(fname)
-    fname = os.path.join(data_path, str(limit_to), 'duplets_merged_across.p.bz2')
-    duplets = t.load_compressed_pickle(fname)
+    # fname = os.path.join(data_path, str(limit_to), 'quadruplets_merged_across.p.bz2')
+    # quadruplets = t.load_compressed_pickle(fname)
+    # fname = os.path.join(data_path, str(limit_to), 'triplets_merged_across.p.bz2')
+    # triplets = t.load_compressed_pickle(fname)
+    # fname = os.path.join(data_path, str(limit_to), 'duplets_merged_across.p.bz2')
+    # duplets = t.load_compressed_pickle(fname)
+    quadruplets, triplets, duplets = [], [], []
 
     print 'Generationg reports for across orders merged lists'
 
@@ -93,6 +94,7 @@ def generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2de
         os.mkdir(report_files_dir)
 
     for i, kplet_pool in zip([5, 4, 3, 2], [pentaplets, quadruplets, triplets, duplets]):
+        print i
         j = 0
         for kplet_sublist in kplet_pool:
             cur_reports_folder = os.path.join(report_files_dir, str(i))
@@ -107,6 +109,8 @@ def generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2de
                 continue
 
             xls_file_name = os.path.join(cur_reports_folder,  "%d_%d.xls" % (j+1, i))
+            community_classes = merging.cdd_profile_count_into_class_count(community_count)
+            community_flank_classes = merging.cdd_profile_count_into_class_count(community_count_with_flanks)
             j += 1
             params = dict()
             params['xls_file_name'] = xls_file_name
@@ -116,6 +120,8 @@ def generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2de
             params['target_profiles'] = target_profiles
             params['profile2def'] = profile2def
             params['gid2arcog_cdd'] = gid2arcog_cdd
+            params['class_counts'] = community_classes
+            params['class_flank_counts'] = community_flank_classes
             r.write_to_xls(params)
 
 
@@ -201,17 +207,8 @@ if __name__ == '__main__':
     #     print 'Done'
     #     print "------------------------"
 
-    data_path = os.path.join(gv.project_data_path,'Bacteria/pickle/')
-    print 'Generating community counts'
-    for limit_to in [10000 ,100000]:
-        print "Limit_to:", limit_to
-        print
-        cur_path = os.path.join(data_path, str(limit_to))
-        # generate_pickles(cur_path, limit_to)
-        get_profiles_counts(cur_path)
-        print 'Done'
-        print "------------------------"
 
+    data_path = os.path.join(gv.project_data_path,'Bacteria/pickle/')
 
     print 'Generating plots'
     limit_to = 100000
@@ -221,3 +218,16 @@ if __name__ == '__main__':
     generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path)
     print 'Done'
     print "------------------------"
+
+
+    # print 'Generating community counts'
+    # for limit_to in [10000 ,100000]:
+    #     print "Limit_to:", limit_to
+    #     print
+    #     cur_path = os.path.join(data_path, str(limit_to))
+    #     # generate_pickles(cur_path, limit_to)
+    #     get_profiles_counts(cur_path)
+    #     print 'Done'
+    #     print "------------------------"
+    #
+    #

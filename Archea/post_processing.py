@@ -94,7 +94,9 @@ def generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2de
         os.mkdir(report_files_dir)
 
     for i, kplet_pool in zip([5, 4, 3, 2], [pentaplets, quadruplets, triplets, duplets]):
+        print 'Starting for', i
         j = 0
+
         for kplet_sublist in kplet_pool:
             cur_reports_folder = os.path.join(report_files_dir, str(i))
             if not os.path.exists(cur_reports_folder):
@@ -109,8 +111,8 @@ def generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2de
                 continue
 
             xls_file_name = os.path.join(cur_reports_folder,  "%d_%d.xls" % (j+1, i))
-            community_file = os.path.join(cur_reports_folder,  "%d_%d_community.p.bz2" % (j+1, i))
-            community_flank_file = os.path.join(cur_reports_folder,  "%d_%d_community_flank.p.bz2" % (j+1, i))
+            community_classes = merging.arcog_profile_count_into_class_count(community_count)
+            community_flank_classes = merging.arcog_profile_count_into_class_count(community_count_with_flanks)
             j += 1
             params = dict()
             params['xls_file_name'] = xls_file_name
@@ -120,10 +122,43 @@ def generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2de
             params['target_profiles'] = target_profiles
             params['profile2def'] = profile2def
             params['gid2arcog_cdd'] = gid2arcog_cdd
+            params['class_counts'] = community_classes
+            params['class_flank_counts'] = community_flank_classes
             r.write_to_xls(params)
 
-            t.dump_compressed_pickle(community_file, community_count)
-            t.dump_compressed_pickle(community_flank_file, community_count_with_flanks)
+
+def get_profiles_counts(data_path):
+    # file_names = ['pentaplets', 'quadruplets', 'triplets', 'duplets']
+    file_names = ['duplets', 'triplets', 'quadruplets', 'pentaplets']
+    print 'Reading merged kplet files'
+
+    for file_name in file_names:
+        print 'Loading the file:', file_name
+        dump_file = bz2.BZ2File(os.path.join(data_path, '%s_merged_across.p.bz2'%file_name))
+        kplets_pool = pickle.load(dump_file)
+
+        print 'Counting community'
+        community_count_pool = []
+        community_count_pool_with_flanks = []
+        for kplets in kplets_pool:
+            _src2org, _, _, community_count, community_count_with_flanks = merging.merge_into_file_summaries(kplets,
+                                                                         neighborhood_files_path,
+                                                                         file2src_src2org_map)
+            if not _src2org:
+                continue
+            community_count_pool.append(community_count)
+            community_count_pool_with_flanks.append(community_count_with_flanks)
+
+        dump_file_name = os.path.join(data_path, '%s_community_count.p.bz2'%file_name)
+        print 'Dumping into', dump_file_name
+        t.dump_compressed_pickle(dump_file_name, community_count_pool)
+
+        dump_file_name = os.path.join(data_path, '%s_community_count_with_flanks.p.bz2'%file_name)
+        print 'Dumping into', dump_file_name
+        t.dump_compressed_pickle(dump_file_name, community_count_pool_with_flanks)
+
+        print
+        print
 
 
 def generate_pickles(save_path, limit_to):
@@ -162,39 +197,6 @@ def generate_pickles(save_path, limit_to):
     print
 
 
-def get_profiles_counts(data_path):
-    # file_names = ['pentaplets', 'quadruplets', 'triplets', 'duplets']
-    file_names = ['duplets', 'triplets', 'quadruplets', 'pentaplets']
-    print 'Reading merged kplet files'
-
-    for file_name in file_names:
-        print 'Loading the file:', file_name
-        dump_file = bz2.BZ2File(os.path.join(data_path, '%s_merged_across.p.bz2'%file_name))
-        kplets_pool = pickle.load(dump_file)
-
-        print 'Counting community'
-        community_count_pool = []
-        community_count_pool_with_flanks = []
-        for kplets in kplets_pool:
-            a, b, c, community_count, community_count_with_flanks = merging.merge_into_file_summaries(kplets,
-                                                                         neighborhood_files_path,
-                                                                         file2src_src2org_map)
-            if not a:
-                continue
-            community_count_pool.append(community_count)
-            community_count_pool_with_flanks.append(community_count_with_flanks)
-
-        dump_file_name = os.path.join(data_path, '%s_community_count.p.bz2'%file_name)
-        print 'Dumping into', dump_file_name
-        t.dump_compressed_pickle(dump_file_name, community_count_pool)
-
-        dump_file_name = os.path.join(data_path, '%s_community_count_with_flanks.p.bz2'%file_name)
-        print 'Dumping into', dump_file_name
-        t.dump_compressed_pickle(dump_file_name, community_count_pool_with_flanks)
-
-        print
-        print
-
 
 if __name__ == '__main__':
 
@@ -205,8 +207,6 @@ if __name__ == '__main__':
     neighborhood_files_path = neighborhoods_path()
     print "\n"
 
-    data_path = os.path.join(gv.project_data_path, 'Archea/pickle/')
-
     for limit_to, report_dir in zip([1000000], ['all']):
         print "Limit_to:", limit_to
         print
@@ -214,15 +214,11 @@ if __name__ == '__main__':
         print '\t\t Done'
         print "------------------------\n\n"
 
-    sys.exit()
-
-    for limit_to in [10000, 1000000]:
-
-        print "Limit_to:", limit_to
-        print
-        cur_path = os.path.join(data_path, str(limit_to))
-        # generate_pickles(cur_path, limit_to)
-        get_profiles_counts(cur_path)
-        print 'Done'
-        print "------------------------"
-
+    # data_path = os.path.join(gv.project_data_path, 'Archea/pickle/')
+    # for limit_to in [1000000]:
+    #     print "Limit_to:", limit_to
+    #     print
+    #     cur_path = os.path.join(data_path, str(limit_to))
+    #     get_profiles_counts(cur_path)
+    #     print 'Done'
+    #     print "------------------------"

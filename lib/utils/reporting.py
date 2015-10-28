@@ -2,6 +2,7 @@ __author__ = 'hudaiber'
 
 import sys
 import xlsxwriter as x
+from operator import itemgetter
 
 if sys.platform=='darwin':
     sys.path.append('/Users/hudaiber/Projects/lib/BioPy/')
@@ -26,6 +27,8 @@ def write_to_xls(params):
     target_profiles = params['target_profiles']
     profile2def = params['profile2def']
     gid2arcog_cdd = params['gid2arcog_cdd']
+    class_counts = params['class_counts']
+    class_flank_counts = params['class_flank_counts']
 
     workbook = x.Workbook(xls_file)
     worksheet = workbook.add_worksheet()
@@ -70,7 +73,29 @@ def write_to_xls(params):
     worksheet.merge_range(top_border, 0, top_border, 10, ' '.join(organisms))
     top_border += 2
 
+    # Writing the class distribution. The lestmost columns
+    cur_top_border = top_border
+    worksheet.write_row(cur_top_border, left_border, ['Occurence','Class definition'], header_format)
+    worksheet.set_column(left_border+1, left_border+1, 30)
+    cur_top_border += 1
+    worksheet.write_row(cur_top_border, left_border+1, ['Neighborhood'], header_format)
+    cur_top_border += 2
 
+    for (class_name, occurence) in sorted(class_counts.items(), key=itemgetter(1), reverse=True):
+        worksheet.write_row(cur_top_border, left_border, [occurence, class_name])
+        cur_top_border += 1
+
+    cur_top_border += 2
+    worksheet.write_row(cur_top_border, left_border+1, ['Neighborhood+flanks'], header_format)
+    cur_top_border += 2
+
+    for (class_name, occurence) in sorted(class_flank_counts.items(), key=itemgetter(1), reverse=True):
+        worksheet.write_row(cur_top_border, left_border, [occurence, class_name])
+        cur_top_border += 1
+
+
+    left_border = 4
+    # Starting to write the data file-wise.
     for file_summary in file_summaries:
 
         cur_kplets = file_summary.kplets
@@ -120,7 +145,7 @@ def write_to_xls(params):
             data_raw = [gene.gid, gene.pFrom, gene.pTo, gene.strand, gene.cogid, cur_def]
             worksheet.write_row(cur_top_border, left_border, data_raw, data_format)
             worksheet.write_row(cur_top_border, left_border+row_len, [" "])
-            worksheet.set_column(left_border+row_len-1,left_border+row_len-1,30)
+            worksheet.set_column(left_border+row_len-1, left_border+row_len-1, 30)
             cur_top_border += 1
         cur_top_border += 2
         worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1, "Kplets:")

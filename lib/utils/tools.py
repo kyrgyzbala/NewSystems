@@ -28,38 +28,54 @@ def bacteria_target_profiles():
 
 def map_src2org():
 
-    return {l.split()[1]:l.split()[0] for l in open(os.path.join(gv.data_path, 'info', 'map_gnm_src.txt')).readlines()}
+    return {l.split()[1]:l.split()[0] for l in
+            open(os.path.join(gv.data_path, 'info', 'map_gnm_src.txt')).readlines()}
 
 
 def map_genome2weight():
 
-    return {l.split()[0] : float(l.split()[1]) for l in open(os.path.join(gv.data_path, 'CDD', 'Prok1402_ad.weight.tab')).readlines()}
+    return {l.split()[0] : float(l.split()[1]) for l in
+            open(os.path.join(gv.data_path, 'CDD', 'Prok1402_ad.weight.tab')).readlines()}
 
 
 def map_profile2def():
 
-    def_map = {l.split('\t')[0]: l.split('\t')[3] for l in open(os.path.join(gv.data_path, 'Archea/arCOG/ar14.arCOGdef.tab')).readlines()}
+    def_map = {l.split('\t')[0]: l.split('\t')[3] for l in
+               open(os.path.join(gv.data_path, 'Archea/arCOG/ar14.arCOGdef.tab')).readlines()}
     def_map["-"] = " "
     return def_map
 
 
 def map_cdd_profile2def():
 
-    def_map = {l.split('\t')[1]: l.split('\t')[3] for l in open(os.path.join(gv.data_path, 'CDD/cdfind_pub_ad.dat')).readlines()}
+    def_map = {l.split('\t')[1]: l.split('\t')[3] for l in
+               open(os.path.join(gv.data_path, 'CDD/cdfind_pub_ad.dat')).readlines()}
     def_map["-"] = " "
     return def_map
 
 
-def map_profile2class():
+def map_arcog2class():
 
-    _profile2class = { l.split('\t')[0]: l.split('\t')[1] for l in open(os.path.join(gv.data_path, 'Archea/arCOG/ar14.arCOGdef.tab')).readlines()}
-    _class2def = { l.split('\t')[0]: l.split('\t')[2].strip() for l in open(os.path.join(gv.data_path, 'Archea/arCOG/ar14/funclass.tab')) }
+    _profile2class = {l.split('\t')[0]: l.split('\t')[1] for l in
+                      open(os.path.join(gv.data_path, 'Archea/arCOG/ar14.arCOGdef.tab')).readlines()}
+    _class2def = {l.split('\t')[0]: l.split('\t')[2].strip() for l in
+                  open(os.path.join(gv.data_path, 'Archea/arCOG/ar14/funclass.tab'))}
+    return {k:_class2def[v] for k,v in _profile2class.items() if v in _class2def}
+
+
+def map_cdd2class():
+
+    cdd_class_file = '/Users/hudaiber/Projects/NewSystems/code/scripts/cdd_clusters/cdd_to_class.tab'
+    _profile2class = {l.split('\t')[0]: l.split('\t')[1].strip() for l in open(cdd_class_file).readlines()}
+    _class2def = {l.split('\t')[0]: l.split('\t')[2].strip() for l in
+                  open(os.path.join(gv.data_path, 'Archea/arCOG/ar14/funclass.tab'))}
     return {k:_class2def[v] for k,v in _profile2class.items() if v in _class2def}
 
 
 def map_genome2weight():
 
-    return {l.split()[0]: float(l.split()[1]) for l in open(os.path.join(gv.data_path, 'CDD', 'Prok1402_ad.weight.tab')).readlines()}
+    return {l.split()[0]: float(l.split()[1]) for l in
+            open(os.path.join(gv.data_path, 'CDD', 'Prok1402_ad.weight.tab')).readlines()}
 
 
 def map_gid2src(map_file):
