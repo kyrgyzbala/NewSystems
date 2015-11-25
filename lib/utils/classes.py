@@ -3,9 +3,17 @@ __author__ = 'Sanjarbek Hudaiberdiev'
 import sys
 if sys.platform=='darwin':
     sys.path.append('/Users/hudaiber/Projects/lib/BioPy/')
+    sys.path.append('/Users/hudaiber/Projects/SystemFiles/')
 elif sys.platform=='linux2':
     sys.path.append('/home/hudaiber/Projects/lib/BioPy/')
-import dm_tools as t
+    sys.path.append('/home/hudaiber/Projects/SystemFiles/')
+
+import global_variables as gv
+import dm_tools as dt
+import lib.utils.tools as t
+
+gnm2weight = t.map_genome2weight()
+file2org = t.map_file2organism()
 
 class ProfileCount(object):
     def __init__(self, count, weight, gid):
@@ -17,7 +25,7 @@ class ProfileCount(object):
 class Neighborhood(object):
     def __init__(self, source_file):
         self.source_file = source_file
-        self.genes = t.get_pty_file(source_file)
+        self.genes = dt.get_pty_file(source_file)
         for gene in self.genes:
             gene.tag = 'neighborhood'
         self.flank_extension = None
@@ -28,7 +36,7 @@ class Neighborhood(object):
         last = self.genes[-1].gid
         upstream, downstream = [], []
 
-        pty_genes = t.get_pty_file(pty_path)
+        pty_genes = dt.get_pty_file(pty_path)
         pty_genes.sort()
 
         for i in range(len(pty_genes)):
@@ -55,20 +63,20 @@ class Neighborhood(object):
 
 class Kplet(object):
 
-    def __init__(self, id, codes, weight=None, count=None, files=None):
+    def __init__(self, id, codes, count=None, files=None):
         self.codes = set(codes)
         self.k = len(codes)
         self.id = id
-        self.weight = weight
         self.count = count
         self.files = sorted(files)
         self.locations = {f: [] for f in self.files}
         self.gids = set()
+        self.gid2file = dict()
 
     def load_locations(self, neighborhoods_path):
 
         for f in self.files:
-            genes = t.get_pty_file(neighborhoods_path+'/'+f)
+            genes = dt.get_pty_file(neighborhoods_path+'/'+f)
 
             gi_list = set([])
             for gene in genes:
@@ -80,6 +88,12 @@ class Kplet(object):
             self.locations[f] = gi_list
             self.gids.update(gi_list)
 
+            for gid in gi_list:
+                self.gid2file[gid] = f
+
+        self.weight = sum(gnm2weight[file2org[self.gid2file[gid]]] for gid in self.gids)
+
+
     def __cmp__(self, other):
         if self.weight > other.weight:
             return 1
@@ -89,9 +103,60 @@ class Kplet(object):
             return 0
 
 
+class KpletList(object):
+
+    def __init__(self, kplets, ranks_order):
+        self.kplets = kplets
+        self.ranks_order = ranks_order
+
+        self.all_gids = set()
+        self.gid2file = dict()
+        self.files = set()
+
+        for kplet in kplets:
+            _gids = kplet.gids
+            self.all_gids.update(_gids)
+            self.gid2file.update(kplet.gid2file)
+            self.files.update(kplet.files)
+
+        self.weight = sum(gnm2weight[file2org[self.gid2file[gid]]] for gid in self.all_gids)
+
+    def merge(self, other):
+
+        self.kplets += other.kplets
+        self.ranks_order += other.ranks_order
+        self.files.update(other.files)
+
+        for kplet in other.kplets:
+            _gids = kplet.gids
+            self.all_gids.update(_gids)
+            self.gid2file.update(kplet.gid2file)
+
+        self.weight = sum(gnm2weight[file2org[self.gid2file[gid]]] for gid in self.all_gids)
+
+
+
+
+
+# class File(object):
+#
+#     def __init__(self, file_name, data_type='bacteria'):
+#
+#         if data_type == "bacteria":
+#             data_path = os.path.join(gv.project_data_path, 'Bacteria/genes_and_flanks/win_10/pty')
+#         elif data_type == "archea":
+#             data_path = os.path.join(gv.project_data_path,   'Archea/genes_and_flanks/win_10/pty')
+#
+#         self.name = file_name
+#         terms = open(os.path.join(data_path, file_name)).readlines()[0].split("\t")
+#
+#         self.organism = terms[3]
+#         self.source = terms[4]
+
+
 class NeighborhoodFileSummary(object):
 
-    def __init__(self, file_name, kplets, neighborhood, org, src):
+    def __init__(self, file_name, kplets, neighborhood, org, src, weight):
         """Class for keeping summery information for a file. Keeps account of kplets (and related information for
         that kplet) found in current file.
         Default sorting is carried by total weights"""
@@ -100,14 +165,7 @@ class NeighborhoodFileSummary(object):
         self.kplets = kplets
         self.neighborhood = neighborhood
         self.count = sum([kplet.count for kplet in kplets])
-        self.weight = sum([kplet.weight for kplet in kplets])
+        self.kplets_weight = sum([kplet.weight for kplet in kplets])
+        self.self_weight = weight
         self.org = org
         self.src = src
-
-    def __cmp__(self, other):
-        if self.weight > other.weight:
-            return 1
-        elif self.weight < other.weight:
-            return -1
-        else:
-            return 0

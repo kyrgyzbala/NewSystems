@@ -171,3 +171,21 @@ if __name__ == '__main__':
 
     fname = '/Users/hudaiber/Projects/NewSystems/data/Bacteria/pickle/100000/pentaplets_community_count.p.bz2'
     pp_com_cnt = t.load_compressed_pickle(fname)
+
+
+    pentaplets
+
+    pivot_files = set()
+    for kplet in pentaplets[1].kplets:
+        pivot_files.update(set(kplet.files))
+
+    for i in range(2, len(pentaplets)):
+        _files = set()
+        for kplet in pentaplets[i].kplets:
+            _files.update(set(kplet.files))
+
+        min_len = min(len(pivot_files), len(_files))
+        if len(pivot_files.intersection(_files))/float(min_len) > 0.3:
+            print i, min_len, len(pivot_files.intersection(_files))
+
+

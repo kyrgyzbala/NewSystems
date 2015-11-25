@@ -144,7 +144,7 @@ def get_report_kplets(id2cdd ,limit_to=500, load_locations=None):
         count = row[5]
         weight = row[6]
         files = row[7].split(',')
-        tmp_kplet = Kplet(id=id, codes=kplet_codes, weight=weight, count=count, files=files)
+        tmp_kplet = Kplet(id=id, codes=kplet_codes, count=count, files=files)
         out_list.append(tmp_kplet)
 
     _path = neighborhoods_path()

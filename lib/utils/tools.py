@@ -9,7 +9,7 @@ elif sys.platform == 'linux2':
     sys.path.append('/home/hudaiber/Projects/SystemFiles/')
 import global_variables as gv
 import os
-from lib.utils import classes as cl
+import classes as cl
 from operator import itemgetter
 import cPickle
 import bz2
@@ -19,6 +19,7 @@ def target_profiles():
 
     profiles_file = os.path.join(gv.project_data_path, 'Archea/arCOG/selected_arcogs.txt')
     return [l.strip() for l in open(profiles_file).readlines()]
+
 
 def bacteria_target_profiles():
 
@@ -54,22 +55,131 @@ def map_cdd_profile2def():
     return def_map
 
 
+def update_dictionary(map, key, value):
+    if key in map:
+        map[key] += value
+    else:
+        map[key] = value
+
+
+def update_dictionary_set(map, key, value):
+    if key in map:
+        map[key].update(value)
+    else:
+        map[key] = value
+
+
+# def update_dictionary_list_value(map, key, value):
+#     if key in map:
+#         map[key] += [value]
+#     else:
+#         map[key] = [value]
+
+
+def merge(d1, d2, merge_fn):
+    """
+    Merges two dictionaries, non-destructively, combining
+    values on duplicate keys as defined by the optional merge
+    function.  The default behavior replaces the values in d1
+    with corresponding values in d2.
+
+    Examples:
+
+    >>> d1
+    {'a': 1, 'c': 3, 'b': 2}
+    >>> merge(d1, d1, lambda x,y: y)
+    {'a': 1, 'c': 3, 'b': 2}
+    >>> merge(d1, d1)
+    {'a': 2, 'c': 6, 'b': 4}
+    """
+    result = dict(d1)
+    for k,v in d2.items():
+        if k in result:
+            result[k] = merge_fn(result[k], v)
+        else:
+            result[k] = v
+    return result
+
+
+def merge_set_val(d1, d2):
+
+    result = dict(d1)
+    for k,v in d2.items():
+        if k in result:
+            result[k].update(v)
+        else:
+            result[k] = v
+    return result
+
+
+
+def merge_dict_list(dict_list, merge_fn=lambda x,y: x+y):
+    """
+    Merge list of dictionaries into one dictionary.
+    It uses the merge(d1, d2, merge_fn=lambda x,y: x+y)
+    function from above. For the purpose of this library,
+    it uses the default function for merging, which is addition.
+    """
+    result = dict()
+    for _dict in dict_list:
+        result = merge(result, _dict, merge_fn)
+    return result
+
+
+def merge_dict_set_list(dict_list, gid2weights):
+
+    result = dict()
+    for _dict in dict_list:
+        result = merge_set_val(result, _dict)
+
+    for k,v in result.items():
+        result[k] = sum(gid2weights[gid] for gid in v)
+
+    return result
+
+
+# def merge_cog2gids_list(cog2gids_list):
+#
+#     result = dict()
+#
+#     for _dict in cog2gids_list:
+#
+#
+
+
 def map_arcog2class():
 
-    _profile2class = {l.split('\t')[0]: l.split('\t')[1] for l in
+    _profile2class_code = {l.split('\t')[0]: l.split('\t')[1] for l in
                       open(os.path.join(gv.data_path, 'Archea/arCOG/ar14.arCOGdef.tab')).readlines()}
     _class2def = {l.split('\t')[0]: l.split('\t')[2].strip() for l in
                   open(os.path.join(gv.data_path, 'Archea/arCOG/ar14/funclass.tab'))}
-    return {k:_class2def[v] for k,v in _profile2class.items() if v in _class2def}
+
+    _profile2class_def = dict()
+    for _profile,_class_code in _profile2class_code.items():
+        for _sub_class_code in _class_code:
+            _class_def = _class2def[_sub_class_code]
+            # update_dictionary_list_value(_profile2class_def, _profile, _class_def)
+            update_dictionary(_profile2class_def, _profile, [_class_def])
+
+    return _profile2class_def
 
 
 def map_cdd2class():
 
-    cdd_class_file = '/Users/hudaiber/Projects/NewSystems/code/scripts/cdd_clusters/cdd_to_class.tab'
-    _profile2class = {l.split('\t')[0]: l.split('\t')[1].strip() for l in open(cdd_class_file).readlines()}
-    _class2def = {l.split('\t')[0]: l.split('\t')[2].strip() for l in
-                  open(os.path.join(gv.data_path, 'Archea/arCOG/ar14/funclass.tab'))}
-    return {k:_class2def[v] for k,v in _profile2class.items() if v in _class2def}
+    base_path = os.path.join(gv.project_code_path, 'scripts/cdd_clusters')
+    cdd_class_file     = os.path.join(base_path, 'cdd_to_class.tab')
+    cdd_class_def_file = os.path.join(base_path, 'fun2003-2014.tab')
+
+    _profile2class_code = {l.split('\t')[0]: l.split('\t')[1].strip() for l in open(cdd_class_file).readlines()}
+    _class2def = {l.split('\t')[0]: l.split('\t')[1].strip() for l in open(cdd_class_def_file).readlines()}
+
+    _profile2class_def = dict()
+    for _profile,_class_code in _profile2class_code.items():
+        for _sub_class_code in _class_code:
+            _class_def = _class2def[_sub_class_code]
+            update_dictionary(_profile2class_def, _profile, [_class_def])
+
+    return _profile2class_def
 
 
 def map_genome2weight():
@@ -161,7 +271,7 @@ def load_neighborhoods(path, target_files=None):
     if not target_files:
         files = [os.path.join(path, f) for f in os.listdir(path)]
     else:
-        files= [os.path.join(path, f) for f in target_files]
+        files = [os.path.join(path, f) for f in target_files]
 
     return [cl.Neighborhood(f) for f in files]
 
@@ -185,9 +295,30 @@ def dump_compressed_pickle(fname, data, compression='bz2'):
         raise NotImplementedError
 
 
+def map_file2organism():
+
+    retval = dict()
+
+    fname = os.path.join(gv.project_data_path,'Archea/genes_and_flanks/win_10/filename_source_organism.tab')
+    for l in open(fname):
+        terms = l.strip().split()
+        retval[terms[0]] = terms[2]
+
+    fname = os.path.join(gv.project_data_path,'Bacteria/genes_and_flanks/win_10/filename_source_organism.tab')
+    for l in open(fname):
+        terms = l.strip().split()
+        retval[terms[0]] = terms[2]
+
+    return retval
+
+
 if __name__=='__main__':
+
+    file2organism = map_file2organism()
+
     pass
     # source_path = '/Users/hudaiber/Projects/NewSystems/data/Archea/genes_and_flanks/win_10/pty/'
     # target_file = 'src_to_gids.txt'
     #
     # build_src2gids_map(source_path, target_file)
+

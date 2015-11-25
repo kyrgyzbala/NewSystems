@@ -110,9 +110,8 @@ def get_report_kplets(limit_to=300, load_locations=None):
         if len(set(kplet_codes)) != 3:
             continue
         count = row[4]
-        weight = row[5]
         files = row[6].split(',')
-        tmp_kplet = Kplet(id=id, codes=kplet_codes, weight=weight, count=count, files=files)
+        tmp_kplet = Kplet(id=id, codes=kplet_codes, count=count, files=files)
         out_list.append(tmp_kplet)
 
     _path = neighborhoods_path()

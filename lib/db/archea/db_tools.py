@@ -52,7 +52,7 @@ def org2src_src2files_map(files):
                   inner join genomes g on s.genome_id = g.id
                   where awf.name in ('%s')"""
 
-    _sql_cmd = _sql_cmd % "','".join(list(files))
+    _sql_cmd %= "','".join(list(files))
 
     _cursor = setup_cursor()
     _cursor.execute(_sql_cmd)
