@@ -10,7 +10,7 @@ elif sys.platform=='linux2':
 
 import global_variables as gv
 import dm_tools as dt
-import lib.utils.tools as t
+import tools as t
 
 gnm2weight = t.map_genome2weight()
 file2org = t.map_file2organism()
@@ -73,25 +73,25 @@ class Kplet(object):
         self.gids = set()
         self.gid2file = dict()
 
-    def load_locations(self, neighborhoods_path):
-
-        for f in self.files:
-            genes = dt.get_pty_file(neighborhoods_path+'/'+f)
-
-            gi_list = set([])
-            for gene in genes:
-                for cogid in gene.cogid.split():
-                    if cogid in self.codes:
-                        gi_list.update([gene.gid])
-                        break
-
-            self.locations[f] = gi_list
-            self.gids.update(gi_list)
-
-            for gid in gi_list:
-                self.gid2file[gid] = f
-
-        self.weight = sum(gnm2weight[file2org[self.gid2file[gid]]] for gid in self.gids)
+    # def load_locations(self, neighborhoods_path):
+    #
+    #     for f in self.files:
+    #         genes = dt.get_pty_file(neighborhoods_path+'/'+f)
+    #
+    #         gi_list = set([])
+    #         for gene in genes:
+    #             for cogid in gene.cogid.split():
+    #                 if cogid in self.codes:
+    #                     gi_list.update([gene.gid])
+    #                     break
+    #
+    #         self.locations[f] = gi_list
+    #         self.gids.update(gi_list)
+    #
+    #         for gid in gi_list:
+    #             self.gid2file[gid] = f
+    #
+    #     self.weight = sum(gnm2weight[file2org[self.gid2file[gid]]] for gid in self.gids)
 
 
     def __cmp__(self, other):
@@ -137,7 +137,6 @@ class KpletList(object):
 
 
 
-
 # class File(object):
 #
 #     def __init__(self, file_name, data_type='bacteria'):
@@ -169,3 +168,37 @@ class NeighborhoodFileSummary(object):
         self.self_weight = weight
         self.org = org
         self.src = src
+
+
+
+class WGSNeighborhoodFileSummary(object):
+
+    def __init__(self, file_name, kplets, genes, org, src, cluster=None):
+        """ cluster: is the Cluster class objects from utils.merging.wgs
+            shows which cluster current locus is representing.
+        """
+
+        self.file_name = file_name
+        self.kplets = kplets
+        self.genes = genes
+        self.count = sum([kplet.count for kplet in kplets])
+        self.org = org
+        self.src = src
+        self.cluster = cluster
+        self.cluster_local_count = 0
+
+
+class WgsKpletList(object):
+
+    def __init__(self, kplets):
+
+        self.kplets = kplets
+        self.files = set()
+        for kplet in kplets:
+            self.files.update(kplet.files)
+        self.count = len(self.files)
+
+    def merge(self, other):
+
+        self.kplets += other.kplets
+        self.files.update(other.files)

@@ -97,13 +97,12 @@ def get_report_kplets(id2cdd, limit_to=500, load_locations=None):
     out_list = []
 
     for row in _db.retrieve():
-        id = row[0]
-        kplet_codes = [id2cdd[int(id)] for id in row[1:6]]
+        kplet_id = row[0]
+        kplet_codes = [id2cdd[int(_id)] for _id in row[1:6]]
 
         if len(set(kplet_codes)) != 5:
             continue
         count = row[6]
-        weight = row[7]
         files = row[8].split(',')
         tmp_kplet = Kplet(id=id, codes=kplet_codes, count=count, files=files)
         out_list.append(tmp_kplet)
@@ -114,3 +113,35 @@ def get_report_kplets(id2cdd, limit_to=500, load_locations=None):
 
     return out_list
 
+def get_report_kplet(kplet_id, id2cdd, load_locations=None):
+
+    _db = DbClass()
+    _db.cmd = """SET group_concat_max_len=1500000;"""
+    _db.execute()
+    _db.cmd = """select ap.* ,count(*) as cnt, sum(w.weight) as wgt, group_concat(awf.name) as an
+                from bacteria_5plets ap
+                inner join bacteria_5plets_win10 apw on ap.id = apw.kplet_id
+                inner join bacteria_win10_files awf on apw.file_id = awf.id
+                inner join sources s on awf.source_id=s.id
+                inner join weights w on w.genome_id=s.genome_id
+                where ap.id=%d
+                group by ap.id""" % kplet_id
+
+    out_list = []
+
+    for row in _db.retrieve():
+        id = row[0]
+        kplet_codes = [id2cdd[int(_id)] for _id in row[1:6]]
+
+        if len(set(kplet_codes)) != 5:
+            continue
+        count = row[6]
+        files = row[8].split(',')
+        tmp_kplet = Kplet(id=id, codes=kplet_codes, count=count, files=files)
+        out_list.append(tmp_kplet)
+
+    _path = neighborhoods_path()
+    if load_locations:
+        [kplet.load_locations(_path) for kplet in out_list]
+
+    return out_list[0]

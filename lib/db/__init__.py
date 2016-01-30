@@ -1,8 +1,12 @@
 __author__ = 'hudaiber'
 
-import MySQLdb as mdb
-connection = mdb.connect(host='mysql-dev', user='hudaiber', db='PatternQuest', passwd='buP!est9')
 
+
+import MySQLdb as mdb
+from warnings import filterwarnings
+filterwarnings('ignore', category = mdb.Warning)
+connection = mdb.connect(host='mysql-dev', user='hudaiber', db='PatternQuest', passwd='buP!est9')
+# connection = mdb.connect(host='localhost', user='root', db='PatternQuest', passwd='')
 
 def setup_cursor():
     try:
@@ -45,6 +49,15 @@ def map_cdd2id():
 
 
 def map_id2cdd():
+    _db = DbClass()
+    _db.cmd = """select id, code from cdd_profiles"""
+
+    rows = _db.retrieve()
+
+    return {int(row[0]): row[1] for row in rows}
+
+
+def map_id2cdd_clusters():
     _db = DbClass()
     _db.cmd = """select id, code from cdd_profiles"""
 

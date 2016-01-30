@@ -9,7 +9,6 @@ elif sys.platform == 'linux2':
     sys.path.append('/home/hudaiber/Projects/SystemFiles/')
 import global_variables as gv
 import os
-import classes as cl
 from operator import itemgetter
 import cPickle
 import bz2
@@ -64,9 +63,15 @@ def update_dictionary(map, key, value):
 
 def update_dictionary_set(map, key, value):
     if key in map:
-        map[key].update(value)
+        if isinstance(value, set):
+            map[key].update(value)
+        else:
+            map[key].update(set([value]))
     else:
-        map[key] = value
+        if isinstance(value, set):
+            map[key] = value
+        else:
+            map[key] = set([value])
 
 
 # def update_dictionary_list_value(map, key, value):
@@ -268,6 +273,8 @@ def get_weighted_profiles_from_neighborhoods(neighborhoods_path, exclude_target=
 
 def load_neighborhoods(path, target_files=None):
 
+    import classes as cl
+
     if not target_files:
         files = [os.path.join(path, f) for f in os.listdir(path)]
     else:
@@ -283,6 +290,7 @@ def load_compressed_pickle(fname, compression='bz2'):
         retval = cPickle.load(f)
     else:
         raise NotImplementedError
+
     return retval
 
 
@@ -298,18 +306,39 @@ def dump_compressed_pickle(fname, data, compression='bz2'):
 def map_file2organism():
 
     retval = dict()
-
-    fname = os.path.join(gv.project_data_path,'Archea/genes_and_flanks/win_10/filename_source_organism.tab')
+    fname = os.path.join(gv.project_data_path, 'Archea/genes_and_flanks/win_10/filename_source_organism.tab')
     for l in open(fname):
         terms = l.strip().split()
         retval[terms[0]] = terms[2]
 
-    fname = os.path.join(gv.project_data_path,'Bacteria/genes_and_flanks/win_10/filename_source_organism.tab')
+    fname = os.path.join(gv.project_data_path, 'Bacteria/genes_and_flanks/win_10/filename_source_organism.tab')
     for l in open(fname):
         terms = l.strip().split()
         retval[terms[0]] = terms[2]
 
     return retval
+
+
+def map_wgs_profile_count(dataset):
+    # Before filtration, After filtration
+    bf, af = {}, {}
+    if dataset==1:
+        fname = os.path.join(gv.project_data_path, 'CRISPR/datasets/cas1_1/wgs_profile_count.tab')
+        bf = {l.strip().split()[1]: l.strip().split()[0] for l in open(fname).readlines()}
+        fname = os.path.join(gv.project_data_path, 'CRISPR/datasets/cas1_1/wgs_profile_count_af.tab')
+        bf = {l.strip().split()[1]: l.strip().split()[0] for l in open(fname).readlines()}
+    elif dataset==2:
+        fname = os.path.join(gv.project_data_path, 'CRISPR/datasets/cas1_2/wgs_profile_count.tab')
+        bf = {l.strip().split()[1]: l.strip().split()[0] for l in open(fname).readlines()}
+        fname = os.path.join(gv.project_data_path, 'CRISPR/datasets/cas1_2/wgs_profile_count_af.tab')
+        af = {l.strip().split()[1]: l.strip().split()[0] for l in open(fname).readlines()}
+    elif dataset==3:
+        fname = os.path.join(gv.project_data_path, 'CRISPR/datasets/crispr/wgs_profile_count.tab')
+        bf = {l.strip().split()[1]: l.strip().split()[0] for l in open(fname).readlines()}
+        fname = os.path.join(gv.project_data_path, 'CRISPR/datasets/crispr/wgs_profile_count_af.tab')
+        af = {l.strip().split()[1]: l.strip().split()[0] for l in open(fname).readlines()}
+
+    return bf, af
 
 
 if __name__=='__main__':

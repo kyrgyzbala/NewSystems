@@ -22,7 +22,6 @@ from operator import itemgetter
 import time
 
 
-
 def flatten(input_list):
     list_is_nested = True
 

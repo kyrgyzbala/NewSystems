@@ -114,6 +114,8 @@ def generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2de
         params['target_profiles'] = target_profiles
         r.write_flanking_count_xls(params)
 
+    sys.exit()
+
     if not os.path.exists(report_files_dir):
         os.mkdir(report_files_dir)
 
@@ -163,30 +165,30 @@ def generate_pickles(save_path, limit_to):
     if not os.path.exists(save_path):
         os.mkdir(save_path)
 
-    # pentaplets  =  p.get_report_kplets(profile_id2code, limit_to=limit_to, load_locations=True)
-    # quadruplets =  q.get_report_kplets(profile_id2code, limit_to=limit_to, load_locations=True)
-    # triplets    = tr.get_report_kplets(profile_id2code, limit_to=limit_to, load_locations=True)
-    # duplets     =  d.get_report_kplets(profile_id2code, limit_to=limit_to, load_locations=True)
-    #
-    # print "Dumping raw kplet data to files"
-    # dump_file = bz2.BZ2File(os.path.join(save_path, 'duplets_raw.p.bz2'), 'w')
-    # pickle.dump(duplets, dump_file)
-    # dump_file = bz2.BZ2File(os.path.join(save_path, 'triplets_raw.p.bz2'), 'w')
-    # pickle.dump(triplets, dump_file)
-    # dump_file = bz2.BZ2File(os.path.join(save_path, 'quadruplets_raw.p.bz2'), 'w')
-    # pickle.dump(quadruplets, dump_file)
-    # dump_file = bz2.BZ2File(os.path.join(save_path, 'pentaplets_raw.p.bz2'), 'w')
-    # pickle.dump(pentaplets, dump_file)
+    pentaplets  =  p.get_report_kplets(profile_id2code, limit_to=limit_to, load_locations=True)
+    quadruplets =  q.get_report_kplets(profile_id2code, limit_to=limit_to, load_locations=True)
+    triplets    = tr.get_report_kplets(profile_id2code, limit_to=limit_to, load_locations=True)
+    duplets     =  d.get_report_kplets(profile_id2code, limit_to=limit_to, load_locations=True)
 
-    print "Loading raw kplets from pickles"
+    print "Dumping raw kplet data to files"
     dump_file = os.path.join(save_path, 'duplets_raw.p.bz2')
-    duplets = t.load_compressed_pickle(dump_file)
+    t.dump_compressed_pickle(dump_file, duplets)
     dump_file = os.path.join(save_path, 'triplets_raw.p.bz2')
-    triplets= t.load_compressed_pickle(dump_file)
+    t.dump_compressed_pickle(dump_file, triplets)
     dump_file = os.path.join(save_path, 'quadruplets_raw.p.bz2')
-    quadruplets = t.load_compressed_pickle(dump_file)
+    t.dump_compressed_pickle(dump_file, quadruplets)
     dump_file = os.path.join(save_path, 'pentaplets_raw.p.bz2')
-    pentaplets = t.load_compressed_pickle(dump_file)
+    t.dump_compressed_pickle(dump_file, pentaplets)
+
+    # print "Loading raw kplets from pickles"
+    # dump_file = os.path.join(save_path, 'duplets_raw.p.bz2')
+    # duplets = t.load_compressed_pickle(dump_file)
+    # dump_file = os.path.join(save_path, 'triplets_raw.p.bz2')
+    # triplets= t.load_compressed_pickle(dump_file)
+    # dump_file = os.path.join(save_path, 'quadruplets_raw.p.bz2')
+    # quadruplets = t.load_compressed_pickle(dump_file)
+    # dump_file = os.path.join(save_path, 'pentaplets_raw.p.bz2')
+    # pentaplets = t.load_compressed_pickle(dump_file)
 
     print "Basic within merging"
     pentaplets = merging.basic_merge_within_orders(pentaplets)
@@ -240,10 +242,10 @@ def generate_pickles(save_path, limit_to):
 if __name__ == '__main__':
 
     print 'Pre-Loading dictionaries'
-    # target_profiles = t.bacteria_target_profiles()
-    # profile2def = t.map_cdd_profile2def()
-    # gid2arcog_cdd = t.map_gid2arcog_cdd()
-    # neighborhood_files_path = neighborhoods_path()
+    target_profiles = t.bacteria_target_profiles()
+    profile2def = t.map_cdd_profile2def()
+    gid2arcog_cdd = t.map_gid2arcog_cdd()
+    neighborhood_files_path = neighborhoods_path()
     profile_id2code = map_id2cdd()
 
     # for limit_to, report_dir in zip([300, 500, 1000, 100000],['top_300', 'top_500', 'top_1000', 'top_100000']):
@@ -265,13 +267,13 @@ if __name__ == '__main__':
         print 'Done'
         print "------------------------"
 
-    sys.exit()
-
-    print 'Generating plots'
-    limit_to = 100000
-    report_dir = 'top_100000'
-    print "Limit_to:", limit_to
-    print
-    generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path)
-    print 'Done'
-    print "------------------------"
+    # sys.exit()
+    #
+    # print 'Generating plots'
+    # limit_to = 100000
+    # report_dir = 'top_100000'
+    # print "Limit_to:", limit_to
+    # print
+    # generate_plots_from_pickle(limit_to, report_dir, target_profiles, profile2def, gid2arcog_cdd, neighborhood_files_path)
+    # print 'Done'
+    # print "------------------------"

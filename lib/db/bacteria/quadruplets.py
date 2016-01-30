@@ -138,7 +138,7 @@ def get_report_kplets(id2cdd ,limit_to=500, load_locations=None):
 
     for row in _db.retrieve():
         id = row[0]
-        kplet_codes = [id2cdd[int(id)] for id in row[1:5]]
+        kplet_codes = [id2cdd[int(_id)] for _id in row[1:5]]
         if len(set(kplet_codes)) != 4:
             continue
         count = row[5]

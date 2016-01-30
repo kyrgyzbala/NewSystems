@@ -460,3 +460,5 @@ def trim_file_summary_list(file_summaries, data_type='bacteria'):
         return [c for c in file_summaries if len(c.kplets) > 10]
     else:
         raise NotImplementedError
+
+
