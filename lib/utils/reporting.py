@@ -667,7 +667,7 @@ def write_to_xls_wgs_kplets(args):
 def write_to_summary_file(args):
 
     worksheet                = args.worksheet
-    cur_worksheet            = args.cur_worksheet
+    #cur_worksheet            = args.cur_worksheet
     kplet_list               = args.kplet_list
     ind                      = args.ind
     local_af_kplet2count     = args.local_af_kplet2count
@@ -680,11 +680,11 @@ def write_to_summary_file(args):
 
     worksheet.write_row(ind+1, 0, ['%d.xls' % ind, crispr_type_summary, kplets_summary])
 
-    cur_worksheet.write_row(0, 0, ["Id", "Gl cnt", "Lc cnt bf", "Lc cnt af", "Codes"])
-    tmp_ind = 1
+    #cur_worksheet.write_row(0, 0, ["Id", "Gl cnt", "Lc cnt bf", "Lc cnt af", "Codes"])
+    #tmp_ind = 1
 
-    for kplet_id, cnt in sorted_kplet2count:
-        codes = " ".join(_id2kplet[kplet_id].codes)
-        row = [kplet_id, _id2kplet[kplet_id].count, local_bf_kplet2count[kplet_id], local_af_kplet2count[kplet_id], codes]
-        cur_worksheet.write_row(tmp_ind, 0, row)
-        tmp_ind += 1
+    #for kplet_id, cnt in sorted_kplet2count:
+    #    codes = " ".join(_id2kplet[kplet_id].codes)
+    #    row = [kplet_id, _id2kplet[kplet_id].count, local_bf_kplet2count[kplet_id], local_af_kplet2count[kplet_id], codes]
+    #    cur_worksheet.write_row(tmp_ind, 0, row)
+    #    tmp_ind += 1

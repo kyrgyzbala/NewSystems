@@ -6,6 +6,9 @@ import MySQLdb as mdb
 from warnings import filterwarnings
 filterwarnings('ignore', category = mdb.Warning)
 connection = mdb.connect(host='mysql-dev', user='hudaiber', db='PatternQuest', passwd='buP!est9')
+
+
+
 # connection = mdb.connect(host='localhost', user='root', db='PatternQuest', passwd='')
 
 def setup_cursor():

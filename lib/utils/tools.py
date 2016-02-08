@@ -12,7 +12,7 @@ import os
 from operator import itemgetter
 import cPickle
 import bz2
-
+import csv
 
 def target_profiles():
 
@@ -339,6 +339,24 @@ def map_wgs_profile_count(dataset):
         af = {l.strip().split()[1]: l.strip().split()[0] for l in open(fname).readlines()}
 
     return bf, af
+
+
+def write_kplets_to_csv(kplets, out_name, compression=False):
+
+    if compression=='True':
+        fout = bz2.BZ2File(out_name, "w")
+        # fout = gzip.open(csv_file,"w")
+    else:
+        fout = open(out_name, "w")
+
+    csv_writer = csv.writer(fout)
+    csv_writer.writerow(('Id', 'K', 'Count', 'Codes', 'Files'))
+    for kplet in kplets:
+        row = []
+        row += [kplet.id, kplet.k, kplet.count,]
+        row += [' '.join(list(kplet.codes)), ' '.join(kplet.files)]
+        csv_writer.writerow(row)
+
 
 
 if __name__=='__main__':

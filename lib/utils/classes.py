@@ -105,34 +105,34 @@ class Kplet(object):
 
 class KpletList(object):
 
-    def __init__(self, kplets, ranks_order):
+    def __init__(self, kplets):
         self.kplets = kplets
-        self.ranks_order = ranks_order
+        # self.ranks_order = ranks_order
 
-        self.all_gids = set()
-        self.gid2file = dict()
+        # self.all_gids = set()
+        # self.gid2file = dict()
         self.files = set()
 
         for kplet in kplets:
-            _gids = kplet.gids
-            self.all_gids.update(_gids)
-            self.gid2file.update(kplet.gid2file)
+        #     _gids = kplet.gids
+        #     self.all_gids.update(_gids)
+        #     self.gid2file.update(kplet.gid2file)
             self.files.update(kplet.files)
 
-        self.weight = sum(gnm2weight[file2org[self.gid2file[gid]]] for gid in self.all_gids)
+        # self.weight = sum(gnm2weight[file2org[self.gid2file[gid]]] for gid in self.all_gids)
 
     def merge(self, other):
 
         self.kplets += other.kplets
-        self.ranks_order += other.ranks_order
+        # self.ranks_order += other.ranks_order
         self.files.update(other.files)
 
-        for kplet in other.kplets:
-            _gids = kplet.gids
-            self.all_gids.update(_gids)
-            self.gid2file.update(kplet.gid2file)
+        # for kplet in other.kplets:
+        #     _gids = kplet.gids
+        #     self.all_gids.update(_gids)
+        #     self.gid2file.update(kplet.gid2file)
 
-        self.weight = sum(gnm2weight[file2org[self.gid2file[gid]]] for gid in self.all_gids)
+        # self.weight = sum(gnm2weight[file2org[self.gid2file[gid]]] for gid in self.all_gids)
 
 
 
