@@ -1,15 +1,24 @@
 __author__ = 'hudaiber'
 
 
-
-import MySQLdb as mdb
-from warnings import filterwarnings
-filterwarnings('ignore', category = mdb.Warning)
-connection = mdb.connect(host='mysql-dev', user='hudaiber', db='PatternQuest', passwd='buP!est9')
-
-
+global connection
+# import MySQLdb as mdb
+# from warnings import filterwarnings
+# filterwarnings('ignore', category = mdb.Warning)
+# connection = mdb.connect(host='mysql-dev', user='hudaiber', db='PatternQuest', passwd='buP!est9')
 
 # connection = mdb.connect(host='localhost', user='root', db='PatternQuest', passwd='')
+
+import sqlite3
+
+
+def create_mysql(db_name):
+    global connection
+    connection = sqlite3.connect(db_name)
+
+def create_mysql_in_memory():
+    global connection
+    connection = sqlite3.connect(":memory:")
 
 def setup_cursor():
     try:

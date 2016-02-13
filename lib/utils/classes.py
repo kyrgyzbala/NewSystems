@@ -12,8 +12,16 @@ import global_variables as gv
 import dm_tools as dt
 import tools as t
 
-gnm2weight = t.map_genome2weight()
-file2org = t.map_file2organism()
+try:
+    gnm2weight = t.map_genome2weight()
+except:
+    gnm2weight = {}
+
+try:
+    file2org = t.map_file2organism()
+except:
+    file2org = {}
+
 
 class ProfileCount(object):
     def __init__(self, count, weight, gid):

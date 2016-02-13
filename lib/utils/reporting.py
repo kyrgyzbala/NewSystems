@@ -16,9 +16,9 @@ from operator import itemgetter
 import os
 from lib.utils import tools
 
-bacteria_target_profiles = set(tools.bacteria_target_profiles())
-profile2def = tools.map_cdd_profile2def()
-gnm2weight = tools.map_genome2weight()
+# bacteria_target_profiles = set(tools.bacteria_target_profiles())
+# profile2def = tools.map_cdd_profile2def()
+# gnm2weight = tools.map_genome2weight()
 
 
 def write_to_xls(params):

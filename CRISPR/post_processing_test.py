@@ -22,8 +22,6 @@ import lib.utils.tools as t
 import lib.utils.reporting as r
 import dm_tools as dt
 from lib.utils.arguments import CrisprReportingWgsInput, CrisprReportingWgsSummaryInput
-import time
-import subprocess as sp
 
 
 from lib.db.crispr import map_profiles_id2code_code2def
@@ -105,13 +103,8 @@ def generate_pickle_order(order, save_path, limit_to):
     print "Finished"
 
 
-def filter_seed(kplets, file2genes=False):
+def filter_seed(kplets, file2genes):
 
-    # if not file2genes:
-    #     _file2genes = {}
-    #     for _f in os.listdir(neighborhood_files_path):
-    #        _file2genes[_f] = dt.get_wgs_file(os.path.join(neighborhood_files_path, _f))
-    #
     new_kplets = list()
     for kplet in kplets:
 
@@ -217,7 +210,7 @@ def generate_reports(merged_lists, reports_dir, neighborhood_files_path):
     del kplet_list
 
     file_summaries_list = sorted(file_summary_list, key=lambda x: len(x.file_summaries), reverse=True)
-    print "Start generating reports at:", reports_dir
+
     for file_summaries_wrapper in file_summaries_list:
 
         xls_file_name = os.path.join(reports_dir, '%d.xls' % ind)
@@ -254,7 +247,7 @@ def generate_reports(merged_lists, reports_dir, neighborhood_files_path):
         ind += 1
 
 
-def merging_pipeline_for_order(order, data_path, load_from_db=False):
+def merging_pipeline_for_order(order, load_from_db=False):
     limit_to = 1000000000
     print "starting for ", order
     if load_from_db:
@@ -281,71 +274,80 @@ def merging_pipeline_for_order(order, data_path, load_from_db=False):
             kplet_file = 'quadruplets.p.bz2'
         elif order == 5:
             kplet_file = 'pentaplets.p.bz2'
+	kplet_file_full = os.path.join(data_path, kplet_file)
+        print kplet_file_full
+        kplets = t.load_compressed_pickle(kplet_file_full)
 
-    kplet_file_full = os.path.join(data_path, kplet_file)
-    print "Loading :",kplet_file_full
-    kplets = t.load_compressed_pickle(kplet_file_full)
 
+
+    # print "Starting for", kplet_file
+    # print "Loading kplets"
+    # kplets = t.load_compressed_pickle(os.path.join(data_path, kplet_file))
     print "No of kplets:", len(kplets)
     
     #print "Loading file2genes"
-    # tic = time.time()
-    # print "Basic merging"
-    # merged_lists = merging.basic_merge_within_orders(kplets)
-    # print "Basic merging done. Merged lists:", len(merged_lists)
-    # # fname = os.path.join(data_path, "basic_merged_"+kplet_file)
-    # # print "Dumping basic merging: ", fname
-    # # t.dump_compressed_pickle(fname, merged_lists)
-    #
-    # print "Iterative merging"
-    # merged_lists = merging.merge_kplets_within_orders_iterative(merged_lists)
-    # print "Iterative merging done. Merged lists:", len(merged_lists)
-    # # fname = os.path.join(data_path, "iterative_merged_"+kplet_file)
-    # # print "Dumping Iterative merging: ",fname
-    # # t.dump_compressed_pickle(fname, merged_lists)
-    # print "Completed in:", time.time()-tic, "(s)"
 
-    csv_kplet_file = os.path.join(data_path, kplet_file.split('.')[0]+".csv")
-    csv_merged_lists_file = os.path.join(data_path, "iterative_merged_"+kplet_file.split('.')[0]+".csv")
-    print "Writing kplets to csv file:"
-    print csv_kplet_file
+    #_file2genes = {}
+    #for _f in os.listdir(neighborhood_files_path):
+    #    _file2genes[_f] = dt.get_wgs_file(os.path.join(neighborhood_files_path, _f))
 
-    t.write_kplets_to_csv(kplets, csv_kplet_file)
-    tic = time.time()
-    print "Starting kpletmerger with params:"
-    print "kpletmerger", csv_kplet_file, csv_merged_lists_file
-    print "\n\n"
-    sp.call(["kpletmerger",csv_kplet_file,csv_merged_lists_file])
-    print "\n\n"
-    print "Completed in:", time.time()-tic, "(s)"
+    # print 'Filtering'
+    # kplets = filter_seed(kplets, _file2genes)
+    # print "No of kplets:", len(kplets)
+    # fname = os.path.join(data_path,  kplet_file.split('.')[0]+'_seed.p.bz2')
+    # print 'Dumping', fname
+    # t.dump_compressed_pickle(fname, kplets)
+
+    print "Basic merging"
+    merged_lists = merging.basic_merge_within_orders(kplets)
+    fname = os.path.join(data_path, "basic_merged_"+kplet_file)
+    print "Dumping basic merging: ", fname
+    t.dump_compressed_pickle(fname, merged_lists)
+
+    print "Iterative merging"
+    merged_lists = merging.merge_kplets_within_orders_iterative(merged_lists)
+    fname = os.path.join(data_path, "iterative_merged_"+kplet_file)
+    print "Dumping Iterative merging: ",fname
+    t.dump_compressed_pickle(fname, merged_lists)
 
 
 if __name__ == '__main__':
 
     # Report generation
-    global dataset
-    global dataset_code
-    global wgs_profile2count_bf
-    global wgs_profile2count_af
 
-    # dataset = int(sys.argv[1])
-    # order = int(sys.argv[2])
+    fname =  os.path.join(gv.project_data_path, 'CRISPR/pickle/cas1_2/duplets_seed.p.bz2')
+    #fname = sys.argv[1]
+    print "Loading kplets"
+    kplets = t.load_compressed_pickle(fname)
 
-    dataset = 3
-    order = 4
-
-    wgs_profile2count_bf, wgs_profile2count_af = t.map_wgs_profile_count(dataset)
+    #files = set()
+    #codes = set()
+    #[files.update(kplet.files) for kplet in kplets]
+    #[codes.update(kplet.codes) for kplet in kplets]
+    #print len(files)
+    #print len(codes)
+    # print len(kplets[0].files)
+    # print len(kplets[1].files)
+    # print len(kplets)
+    print "No of kplets:", len(kplets)
+    print "Basic merging"
+    merged_lists = merging.basic_merge_within_orders(kplets)
     
-    if dataset == 2:
-        dataset_code = 'cas1_2'
-        data_path = os.path.join(gv.project_data_path,'CRISPR/pickle/cas1_2/')
-    elif dataset == 3:
-        dataset_code = 'crispr'
-        data_path = os.path.join(gv.project_data_path,'CRISPR/pickle/crispr/')
+    print len(merged_lists)
+    
+    print "Iterative merging"
+    merged_lists = merging.merge_kplets_within_orders_iterative(merged_lists)
+    
+    print len(merged_lists)
 
-    process_reporting_single_order(order)
 
-    # Pickle generation
-    # generate_pickle_order(order, data_path, 1000000000)
 
-    # merging_pipeline_for_order(order, data_path)
+
+
+
+
+
+
+
+
+
