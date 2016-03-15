@@ -258,7 +258,7 @@ if __name__=='__main__':
     # M = np.load(score_file).items()[0][1]
 
     print("Generating/Loading linkage file")
-    # Z = build_linkage(M, distance_file, linkage_file)
+    Z = build_linkage(M, distance_file, linkage_file)
     Z = np.load(linkage_file).items()[0][1]
     print("Starting to form the clusters")
 

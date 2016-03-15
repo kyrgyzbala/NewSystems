@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 __author__ = 'hudaiber'
 
 import sys
@@ -19,28 +21,27 @@ if __name__=='__main__':
 
     pickle_file = sys.argv[1]
     csv_file = sys.argv[2]
-    compression = sys.argv[3]
 
-    # pickle_file = os.path.join(gv.project_code_path, 'scripts/', 'duplets_seed.p.bz2')
-    # csv_file = os.path.join(gv.project_code_path, 'scripts/', 'duplets_seed.csv')
-    # compression = True
 
     print "Loading objects from file:", pickle_file
-    objects = t.load_compressed_pickle(pickle_file)
-    
-    print "Writing into CSV file:", csv_file
-    if compression=='True':
-        # fout = bz2.BZ2File(csv_file, "w")
-        fout = gzip.open(csv_file,"w")
-    else:
-        fout = open(csv_file, "w")
+    kplets = t.load_compressed_pickle(pickle_file)
+    print "No of kplets:", len(kplets)
+    # print "Writing into CSV file:", csv_file
+    # if compression=='True':
+    #     # fout = bz2.BZ2File(csv_file, "w")
+    #     fout = gzip.open(csv_file,"w")
+    # else:
+    #     fout = open(csv_file, "w")
+
+    print "Writing into file:", csv_file
+    fout = bz2.BZ2File(csv_file, "w")
 
     csv_writer = csv.writer(fout)
     csv_writer.writerow(('Id', 'K', 'Count', 'Codes', 'Files'))
-    for o in objects:
+    for kplet in kplets:
         row = []
-        row += [o.id, o.k, o.count,]
-        row += [' '.join(list(o.codes)), ' '.join(o.files)]
+        row += [kplet.id, kplet.k, kplet.count,]
+        row += [' '.join(list(kplet.codes)), ' '.join(kplet.files)]
         csv_writer.writerow(row)
 
-    print "Done!"
+    fout.close()

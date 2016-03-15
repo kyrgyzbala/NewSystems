@@ -341,11 +341,17 @@ def map_wgs_profile_count(dataset):
     return bf, af
 
 
+def map_global_cdd_profile_count():
+    map_file = os.path.join(os.path.expanduser('~'),'data/CDD/profile2weight.tab')
+    profile2weight = { l.split()[0]:float(l.split()[1]) for l in open(map_file).readlines() if not l.startswith("#")}
+
+    return profile2weight
+
+
 def write_kplets_to_csv(kplets, out_name, compression=False):
 
     if compression=='True':
         fout = bz2.BZ2File(out_name, "w")
-        # fout = gzip.open(csv_file,"w")
     else:
         fout = open(out_name, "w")
 

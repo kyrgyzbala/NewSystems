@@ -81,6 +81,22 @@ def extract_kplets(file, combination_size):
 
     return list(combinations(annotations, combination_size))
 
+def extract_kplets_from_lines(lines, combination_size):
+
+    annotations = list()
+
+    for l in lines:
+        terms = l.strip().split()
+        _annotation = terms[8] if len(terms)==9 else terms[0]
+        annotations.append(_annotation)
+
+    annotations = [l.split(',') for l in annotations]
+
+    annotations = flatten(annotations)
+    annotations = set(annotations)
+
+    return list(combinations(annotations, combination_size))
+
 
 def write_kmers_to_database_old(combination_size, neighborhoods_path):
     cnt = 0
@@ -137,6 +153,34 @@ def write_kmers_to_database(combination_size, prefix):
 
         # if cnt < 5500:
         #     continue
+        lines = open(os.path.join(neighborhoods_path, f)).readlines()
+
+        if combination_size == 4:
+            max_size = 20
+        elif combination_size == 5:
+            max_size = 15
+        if len(lines)<combination_size:
+            continue
+        if len(lines)<=max_size:
+            kplets = extract_kplets_from_lines(lines, combination_size)
+            print f,len(lines),len(kplets)
+            store_kplets_pile(prefix, [(kplets, f)], profile2id, file2id)
+
+        else:
+
+            for i in range(0, len(lines), max_size):
+                if i+max_size < len(lines):
+                    cur_lines = lines[i:i+max_size]
+                else:
+                    cur_lines = lines[len(lines)-max_size:]
+
+                kplets = extract_kplets_from_lines(cur_lines, combination_size)
+                print f,len(lines),i,len(cur_lines),len(kplets)
+                store_kplets_pile(prefix, [(kplets, f)], profile2id, file2id)
+
+
+
+        continue
 
         kplets = extract_kplets(os.path.join(neighborhoods_path, f), combination_size)
 
@@ -164,12 +208,6 @@ def write_kmers_to_database(combination_size, prefix):
     print cnt
     print 'Nbrhds:', cnt, 'total combinations', total, 'zeros', zeros
 
-def create_schema(prefix, k):
-
-    sql = """
-
-
-    """
 
 
 if __name__=='__main__':
@@ -178,8 +216,8 @@ if __name__=='__main__':
 
     # count_profiles_in_neighborhoods(neighborhoods_path, './', 500, 10)
     prefix = "cas"
-    combination_size = int(sys.argv[1])
-    db_name = "%s_%d.db"%(prefix, combination_size)
-    lib.db.create_mysql(db_name)
+    order = int(sys.argv[1])
+    # db_name = "%s_%d.db"%(prefix, combination_size)
+    # lib.db.create_mysql(db_name)
 
-    # write_kmers_to_database(combination_size, prefix)
+    write_kmers_to_database(order, prefix)

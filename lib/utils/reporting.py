@@ -1,5 +1,3 @@
-__author__ = 'hudaiber'
-
 import sys
 import xlsxwriter as x
 
@@ -18,7 +16,7 @@ from lib.utils import tools
 
 # bacteria_target_profiles = set(tools.bacteria_target_profiles())
 # profile2def = tools.map_cdd_profile2def()
-# gnm2weight = tools.map_genome2weight()
+gnm2weight = tools.map_genome2weight()
 
 
 def write_to_xls(params):
@@ -627,7 +625,7 @@ def write_to_xls_wgs_kplets(args):
 
     local_profile_count = dict()
     local_kplet_member_count = dict()
-    
+
     for file_summary in file_summaries:
         _codes = set()
         [_codes.update(kplet.codes) for kplet in file_summary.kplets]
@@ -688,3 +686,304 @@ def write_to_summary_file(args):
     #    row = [kplet_id, _id2kplet[kplet_id].count, local_bf_kplet2count[kplet_id], local_af_kplet2count[kplet_id], codes]
     #    cur_worksheet.write_row(tmp_ind, 0, row)
     #    tmp_ind += 1
+
+
+def write_to_xls_generic_kplets(args):
+
+    xls_file_name            = args.xls_file_name
+    file_summaries           = args.file_summaries
+    organisms                = args.organisms
+    total_weight             = args.weight
+    profile2def              = args.profile_code2def
+    local_bf_kplet2count     = args.local_bf_kplet2count
+    local_af_kplet2count     = args.local_af_kplet2count
+    local_profile2count_bf   = args.local_profile2count_bf
+    local_profile2count_af   = args.local_profile2count_af
+
+    workbook = x.Workbook(xls_file_name)
+    worksheet = workbook.add_worksheet()
+
+    column_names = ['GI', 'From', 'To', 'Strand', 'Contig', 'CDD', 'Definition']
+    row_len = len(column_names)
+
+    title_format = workbook.add_format()
+    title_format.set_font_size(14)
+    title_format.set_bold()
+    title_format.set_align('left')
+
+    header_format = workbook.add_format()
+    header_format.set_font_size(12)
+    header_format.set_bold()
+    header_format.set_align('center')
+
+    target_format = workbook.add_format()
+    target_format.set_font_color("red")
+
+    target_format_neighborhood = workbook.add_format()
+    target_format_neighborhood.set_font_color("red")
+    target_format_neighborhood.set_bg_color("#c4bdbd")
+
+    kplet_format = workbook.add_format()
+    kplet_format.set_font_color("green")
+
+    kplet_format_neighborhood = workbook.add_format()
+    kplet_format_neighborhood.set_font_color("green")
+    kplet_format_neighborhood.set_bg_color("#c4bdbd")
+
+    top_border = 0
+    left_border = 0
+
+    # worksheet.merge_range(0, 0, 0, 10, 'Community: ' + ' '.join(community), title_format)
+    top_border += 1
+
+    worksheet.merge_range(top_border, 0, top_border, 10, 'Organisms: weight: %f count: %d,  Loci: %d'%\
+                          (total_weight ,len(organisms), len(file_summaries)), title_format)
+    top_border += 2
+
+    max_len = max([len(fs.genes) for fs in file_summaries])
+
+    ind = 0
+    conserved_kplets = {}
+    for file_summary in file_summaries:
+        [tools.update_dictionary(conserved_kplets, kplet.id, 1) for kplet in file_summary.kplets]
+
+    if len(file_summaries)>20:
+        conserved_kplet_ids = [k for (k,v) in conserved_kplets.items() if v > len(file_summaries)/10]
+    else:
+        conserved_kplet_ids = [k for (k,v) in conserved_kplets.items() if v > 2]
+
+    tmp = set()
+    # Starting to write the data file-wise.
+    for file_summary in file_summaries:
+        tmp.update([file_summary.org])
+        kplet_codes = set()
+        [kplet_codes.update(kplet.codes) for kplet in file_summary.kplets if kplet.id in conserved_kplet_ids]
+
+        cur_top_border = top_border
+        worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1, "%s\t%s\t%s" % (file_summary.org, file_summary.src, file_summary.file_name), header_format)
+        cur_top_border += 1
+        worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1, "type: %s" % (file_summary.cas_type), header_format)
+        cur_top_border += 1
+        worksheet.write_row(cur_top_border, left_border, column_names, header_format)
+        cur_top_border += 2
+
+        cur_top_border += max_len/2 - len(file_summary.genes)/2
+
+        for gene in file_summary.genes:
+            cur_cogid = set(gene.cogid.split(','))
+
+            if hasattr(gene,'is_seed') and gene.is_seed:
+                data_format = target_format
+            elif cur_cogid.intersection(kplet_codes):
+                data_format = kplet_format
+            else:
+                data_format = workbook.add_format()
+
+            if cur_cogid in [[""], ["-"], [], None]:
+                cur_def = ""
+            else:
+                if len(cur_cogid) > 0:
+                    cur_def = []
+                    for k in cur_cogid:
+                        if k in profile2def:
+                            cur_def.append(profile2def[k])
+                        else:
+                            cur_def.append("")
+                    cur_def = " | ".join(cur_def)
+
+            data_raw = [gene.gid, gene.pFrom, gene.pTo, gene.strand, gene.src, gene.cogid, cur_def]
+            worksheet.write_row(cur_top_border, left_border, data_raw, data_format)
+            worksheet.write_row(cur_top_border, left_border+row_len, [" "])
+            worksheet.set_column(left_border+row_len-1, left_border+row_len-1, 30)
+            cur_top_border += 1
+
+        cur_top_border = top_border + max_len + 4
+
+        worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1, "Kplets:")
+        cur_top_border += 1
+
+        worksheet.write_row(cur_top_border, left_border, ["Id", "Gl cnt", "Lc cnt bf", "Lc cnt af"])
+        worksheet.merge_range(cur_top_border,left_border+4,cur_top_border,left_border+5, "Codes")
+        cur_top_border += 1
+
+        fs_kplets = sorted(file_summary.kplets, key = lambda x: x.count, reverse=True)
+        # fs_kplets = [kplet for kplet in fs_kplets if kplet.id in conserved_kplet_ids]
+
+        for kplet in fs_kplets[:10]:
+
+            # if kplet.id not in conserved_kplet_ids:
+            #     continue
+
+            worksheet.write_row(cur_top_border, left_border, [kplet.id, kplet.count, local_bf_kplet2count[kplet.id], local_af_kplet2count[kplet.id]])
+            worksheet.merge_range(cur_top_border,left_border+4,cur_top_border,left_border+5, " ".join(kplet.codes))
+            cur_top_border += 1
+
+        if len(fs_kplets) > 10:
+
+            worksheet.merge_range(cur_top_border,left_border,cur_top_border,left_border+5, " ... ")
+            cur_top_border += 1
+            worksheet.merge_range(cur_top_border,left_border,cur_top_border,left_border+5, " ... ")
+            cur_top_border += 1
+            worksheet.merge_range(cur_top_border,left_border,cur_top_border,left_border+5, " ... ")
+            cur_top_border += 1
+            worksheet.merge_range(cur_top_border,left_border,cur_top_border,left_border+5, "%d more kplets "%(len(file_summary.kplets) - 10))
+            cur_top_border += 1
+
+        left_border += row_len + 1
+
+        ind += 1
+
+    local_profile_count = dict()
+    local_kplet_member_count = dict()
+
+    for file_summary in file_summaries:
+        _codes = set()
+        [_codes.update(kplet.codes) for kplet in file_summary.kplets]
+        for _code in _codes:
+            tools.update_dictionary(local_kplet_member_count, _code, 1)
+        for gene in file_summary.genes:
+            for code in gene.cogid.split(','):
+                tools.update_dictionary(local_profile_count, code, 1)
+
+    worksheet2 = workbook.add_worksheet()
+    cur_top_border = 0
+
+    # worksheet2.write_row(cur_top_border, 0, ["Profile", "Local af", "Loacl bf", "Global af", "Global bf", "Description"], header_format)
+    worksheet2.write_row(cur_top_border, 0, ["Profile", "Local af", "Description"], header_format)
+    cur_top_border += 1
+
+    worksheet2.set_column(0, 4, 15)
+    worksheet2.set_column(5, 5, 50)
+
+    for code, local_count in sorted(local_profile2count_af.items(), key=itemgetter(1), reverse=True):
+
+        if code == "Unidentified":continue
+
+        row = [code,
+               local_count,
+               # local_profile2count_bf[code],
+               # wgs_profile2count_af[code] if code in wgs_profile2count_af else "-",
+               # wgs_profile2count_bf[code],
+               profile2def[code] if code in profile2def else ""]
+
+        worksheet2.write_row(cur_top_border, 0, row)
+        cur_top_border += 1
+
+
+def write_to_xls_generic_loci(args):
+
+    xls_file_name  = args['xls_file_name']
+    loci           = args['loci']
+    total_weight   = args['weight']
+    profile2def    = args['profile_code2def']
+    file2crispr_type = args['file2crispr_type']
+    feature_labels = args['feature_labels']
+    local_profile2weight = args['local_profile2weight']
+    global_profile2weight = args['global_profile2weight']
+
+    workbook = x.Workbook(xls_file_name)
+    worksheet = workbook.add_worksheet()
+
+    column_names = ['GI', 'From', 'To', 'Strand', 'Contig', 'CDD', 'Definition']
+    row_len = len(column_names)
+
+    title_format = workbook.add_format()
+    title_format.set_font_size(14)
+    title_format.set_bold()
+    title_format.set_align('left')
+
+    header_format = workbook.add_format()
+    header_format.set_font_size(12)
+    header_format.set_bold()
+    header_format.set_align('center')
+
+    target_format = workbook.add_format()
+    target_format.set_font_color("red")
+
+    target_format_neighborhood = workbook.add_format()
+    target_format_neighborhood.set_font_color("red")
+    target_format_neighborhood.set_bg_color("#c4bdbd")
+
+    kplet_format = workbook.add_format()
+    kplet_format.set_font_color("green")
+
+    kplet_format_neighborhood = workbook.add_format()
+    kplet_format_neighborhood.set_font_color("green")
+    kplet_format_neighborhood.set_bg_color("#c4bdbd")
+
+    top_border = 0
+    left_border = 0
+
+    # worksheet.merge_range(0, 0, 0, 10, 'Community: ' + ' '.join(community), title_format)
+    top_border += 1
+
+    organisms = set([locus.organism for locus in loci])
+
+    worksheet.merge_range(top_border, 0, top_border, 10, 'Total weight: %f count: %d. Unique organisms: %d '%\
+                          (total_weight ,len(loci), len(organisms)), title_format)
+    top_border += 2
+
+    max_len = max([len(locus.genes) for locus in loci])
+
+    # Starting to write the data file-wise.
+    for locus in loci:
+        file_name = os.path.basename(locus.file_name)
+        cur_top_border = top_border
+        worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1, "%s\t%s\t%s" %
+                              (locus.organism, locus.source, file_name),
+                              header_format)
+        cur_top_border += 1
+
+        cas_type = ";".join(file2crispr_type[file_name]) if file_name in file2crispr_type else "NA"
+
+        worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1,
+                              "Weight: %f, type: %s" % (gnm2weight[locus.organism],cas_type),
+                              header_format)
+        cur_top_border += 1
+        worksheet.write_row(cur_top_border, left_border, column_names, header_format)
+        cur_top_border += 2
+
+        cur_top_border += max_len/2 - len(locus.genes)/2
+
+        for gene in locus.genes:
+            cur_cogid = set(gene.cogid.split(','))
+            
+            if cur_cogid.intersection(feature_labels):
+                data_format = kplet_format
+            else:
+                data_format = workbook.add_format()
+
+            if cur_cogid in [[""], ["-"], [], None]:
+                cur_def = ""
+            else:
+                if len(cur_cogid) > 0:
+                    cur_def = []
+                    for k in cur_cogid:
+                        if k in profile2def:
+                            cur_def.append(profile2def[k])
+                        else:
+                            cur_def.append("")
+                    cur_def = " | ".join(cur_def)
+
+            data_raw = [gene.gid, gene.pFrom, gene.pTo, gene.strand, gene.src, gene.cogid, cur_def]
+            worksheet.write_row(cur_top_border, left_border, data_raw, data_format)
+            worksheet.write_row(cur_top_border, left_border+row_len, [" "])
+            worksheet.set_column(left_border+row_len-1, left_border+row_len-1, 30)
+            cur_top_border += 1
+
+        left_border += row_len + 1
+
+    worksheet2 = workbook.add_worksheet()
+
+    worksheet2.write_row(0, 0, ["Profile", "Local weight", "Global weight", "Desctiption"], header_format)
+
+    cnt = 1
+    for profile, local in sorted(local_profile2weight.items(), key=itemgetter(1), reverse=True):
+
+        if profile.isdigit():
+            continue
+
+        global_weight = global_profile2weight[profile] if profile in global_profile2weight else "-"
+        profile_def = profile2def[profile] if profile in profile2def else "-"
+        worksheet2.write_row(3+cnt, 0, [profile, local, global_weight, profile_def])
+        cnt += 1

@@ -127,7 +127,7 @@ class KpletList(object):
         #     self.gid2file.update(kplet.gid2file)
             self.files.update(kplet.files)
 
-        # self.weight = sum(gnm2weight[file2org[self.gid2file[gid]]] for gid in self.all_gids)
+        self.weight = 0
 
     def merge(self, other):
 
@@ -170,13 +170,13 @@ class NeighborhoodFileSummary(object):
 
         self.file_name = file_name
         self.kplets = kplets
-        self.neighborhood = neighborhood
+        self.genes = neighborhood
         self.count = sum([kplet.count for kplet in kplets])
-        self.kplets_weight = sum([kplet.weight for kplet in kplets])
-        self.self_weight = weight
+        # self.kplets_weight = sum([kplet.weight for kplet in kplets])
+        self.weight = weight
         self.org = org
         self.src = src
-
+        self.cas_type = ''
 
 
 class WGSNeighborhoodFileSummary(object):
