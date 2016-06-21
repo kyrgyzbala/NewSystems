@@ -14,7 +14,89 @@ import os
 
 # Globals
 _gid2arcog_cdd = t.map_gid2arcog_cdd()
-_neighborhoods_path = neighborhoods_path()
+# _neighborhoods_path = neighborhoods_path()
+
+
+def get_file_summaries(profile_files, neighborhood_files_path, org2weight):
+
+    file_summaries = list()
+
+    for f in profile_files:
+
+        _neighborhood = Neighborhood(os.path.join(neighborhood_files_path, f))
+        _src = _neighborhood.genes[0].src
+        _org = _neighborhood.genes[0].organism
+        _weight = org2weight[_org]
+        source_file = os.path.join(gv.pty_data_path, _org, "%s.pty" % _src)
+
+        if os.path.exists(source_file):
+            _neighborhood.extend_flanks(10, source_file , _gid2arcog_cdd)
+
+        file_summaries.append(NeighborhoodFileSummary(f, [], _neighborhood, _org, _src, _weight))
+
+    file_summaries.sort(key= lambda x: x.weight, reverse=True)
+    return file_summaries
+
+
+def merge_into_file_summaries(kplets, neighborhood_files_path, file2src_src2org_map, data_type='bacteria'):
+
+    _org2weight = t.map_genome2weight()
+
+    _file2kplets = dict()
+    for kplet in kplets:
+        for f in kplet.files:
+            if f in _file2kplets:
+                _file2kplets[f].append(kplet)
+            else:
+                _file2kplets[f] = [kplet]
+
+    kplet_files = _file2kplets.keys()
+    _file2src, _src2org = file2src_src2org_map(kplet_files)
+
+    file_summaries = list()
+    for f in kplet_files:
+        _neighborhood = Neighborhood(os.path.join(neighborhood_files_path, f))
+        _src = _file2src[f]
+        _org = _src2org[_src]
+        _weight = _org2weight[_org]
+        kplets = _file2kplets[f]
+        _neighborhood.extend_flanks(10, os.path.join(gv.pty_data_path, _org, "%s.pty" % _src), _gid2arcog_cdd)
+        file_summaries.append(NeighborhoodFileSummary(f, kplets, _neighborhood, _org, _src, _weight))
+
+    # file_summaries = trim_file_summary_list(file_summaries, data_type)
+    # file_summaries = [fs for fs in file_summaries if fs]
+
+    # Updating the map _file2src after trimming.
+    # new_file_list = [ fs.file_name for fs in file_summaries]
+    # for _file_name in _file2src.keys():
+    #     if _file_name not in new_file_list:
+    #         del _file2src[_file_name]
+
+    # if len(file_summaries) < 2:
+    #     return None, None, None, None, None, None
+
+    file_summaries.sort(key= lambda x: x.weight, reverse=True)
+
+    community_count_with_flanks = {}
+    community_count = {}
+    _org2weight = t.map_genome2weight()
+
+    total_weight = 0
+
+    for i in range(len(file_summaries)):
+        cur_file_summary = file_summaries[i]
+        _weight = _org2weight[cur_file_summary.org]
+        total_weight += _weight
+        for gene in cur_file_summary.neighborhood.genes:
+            if gene.tag == 'flank':
+                for k in gene.cogid.split():
+                    t.update_dictionary(community_count_with_flanks, k, _weight)
+            else:
+                for k in gene.cogid.split():
+                    t.update_dictionary(community_count_with_flanks, k, _weight)
+                    t.update_dictionary(community_count, k, _weight)
+    community = []
+    return _src2org, file_summaries, community, community_count, community_count_with_flanks, total_weight
 
 
 def merge_similar_files(files):
@@ -333,67 +415,6 @@ def merge_kplets_across_orders(superplets_pool, subplets_pool):
     subplets_pool = [l for l in subplets_pool if l]
 
     return superplets_pool, subplets_pool
-
-
-def merge_into_file_summaries(kplets, neighborhood_files_path, file2src_src2org_map, data_type='bacteria'):
-
-    _org2weight = t.map_genome2weight()
-
-    _file2kplets = dict()
-    for kplet in kplets:
-        for f in kplet.files:
-            if f in _file2kplets:
-                _file2kplets[f].append(kplet)
-            else:
-                _file2kplets[f] = [kplet]
-
-    kplet_files = _file2kplets.keys()
-    _file2src, _src2org = file2src_src2org_map(kplet_files)
-
-    file_summaries = list()
-    for f in kplet_files:
-        _neighborhood = Neighborhood(os.path.join(neighborhood_files_path, f))
-        _src = _file2src[f]
-        _org = _src2org[_src]
-        _weight = _org2weight[_org]
-        kplets = _file2kplets[f]
-        _neighborhood.extend_flanks(10, os.path.join(gv.pty_data_path, _org, "%s.pty" % _src), _gid2arcog_cdd)
-        file_summaries.append(NeighborhoodFileSummary(f, kplets, _neighborhood, _org, _src, _weight))
-
-    # file_summaries = trim_file_summary_list(file_summaries, data_type)
-    # file_summaries = [fs for fs in file_summaries if fs]
-
-    # Updating the map _file2src after trimming.
-    # new_file_list = [ fs.file_name for fs in file_summaries]
-    # for _file_name in _file2src.keys():
-    #     if _file_name not in new_file_list:
-    #         del _file2src[_file_name]
-
-    if len(file_summaries) < 2:
-        return None, None, None, None, None, None
-
-    file_summaries.sort(key= lambda x: x.self_weight, reverse=True)
-
-    community_count_with_flanks = {}
-    community_count = {}
-    _org2weight = t.map_genome2weight()
-
-    total_weight = 0
-
-    for i in range(len(file_summaries)):
-        cur_file_summary = file_summaries[i]
-        _weight = _org2weight[cur_file_summary.org]
-        total_weight += _weight
-        for gene in cur_file_summary.neighborhood.genes:
-            if gene.tag == 'flank':
-                for k in gene.cogid.split():
-                    t.update_dictionary(community_count_with_flanks, k, _weight)
-            else:
-                for k in gene.cogid.split():
-                    t.update_dictionary(community_count_with_flanks, k, _weight)
-                    t.update_dictionary(community_count, k, _weight)
-    community = []
-    return _src2org, file_summaries, community, community_count, community_count_with_flanks, total_weight
 
 
 def arcog_profiles_pool_into_classes_pool(profile_community):

@@ -14,15 +14,28 @@ import cPickle
 import bz2
 import csv
 
+
 def target_profiles():
 
+
     profiles_file = os.path.join(gv.project_data_path, 'Archea/arCOG/selected_arcogs.txt')
+
+    if not os.path.exists(profiles_file):
+        profiles_file = '/panfs/pan1.be-md.ncbi.nlm.nih.gov/patternquest/Projects/NewSystems/data/Archea/arCOG/selected_arcogs.txt'
+
+    if not os.path.exists(profiles_file):
+        raise IOError("file selected_arcogs wasn't found")
+
     return [l.strip() for l in open(profiles_file).readlines()]
 
 
 def bacteria_target_profiles():
 
     profiles_file = os.path.join(gv.project_data_path, 'Bacteria/CDD/profile_ids.txt')
+
+    if not os.path.exists(profiles_file):
+        profiles_file = '/panfs/pan1.be-md.ncbi.nlm.nih.gov/patternquest/Projects/NewSystems/data/Bacteria/CDD/profile_ids.txt'
+
     return [l.strip() for l in open(profiles_file).readlines()]
 
 
@@ -51,6 +64,15 @@ def map_cdd_profile2def():
     def_map = {l.split('\t')[1]: l.split('\t')[3] for l in
                open(os.path.join(gv.data_path, 'CDD/cdfind_pub_ad.dat')).readlines()}
     def_map["-"] = " "
+
+    return def_map
+
+
+def map_cdd_ar14_profile2def():
+
+    def_map = map_cdd_profile2def()
+    def_map.update(map_profile2def())
+
     return def_map
 
 
@@ -191,6 +213,12 @@ def map_genome2weight():
 
     return {l.split()[0]: float(l.split()[1]) for l in
             open(os.path.join(gv.data_path, 'CDD', 'Prok1402_ad.weight.tab')).readlines()}
+
+
+def map_archaea_genome2weight():
+
+    return {l.split()[0]: float(l.split()[2]) for l in
+            open(os.path.join(gv.data_path, 'Archea/arCOG/ar14.genclade.tab')).readlines()}
 
 
 def map_gid2src(map_file):

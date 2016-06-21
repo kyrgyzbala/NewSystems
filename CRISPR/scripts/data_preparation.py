@@ -12,8 +12,8 @@ import os
 
 def extract_loci_into_files():
 
-    out_path = '/Volumes/hudaiber/Projects/NewSystems/data/cas1402/files/'
-    source_file = '/Volumes/hudaiber/Projects/NewSystems/data/cas1402/cas1402.arrisl_ID.lst'
+    out_path = '/Volumes/hudaiber/Projects/NewSystems/data/cas4/files/'
+    source_file = '/Volumes/hudaiber/Projects/NewSystems/data/cas4/Islands_ID.ann_clust'
     all_blocks = list()
 
     with open(source_file) as inf:
@@ -33,7 +33,10 @@ def extract_loci_into_files():
 
     for block in all_blocks:
         fname = "%s.pty" % block[0].split('\t')[-1].split()[1]
+        type = block[0].split('\t')[5]
+
         with open(os.path.join(out_path, fname), 'w') as outf:
+            outf.write("#type: %s\n"%type)
             for l in block[1:]:
                 outf.write(l)
 
@@ -44,11 +47,11 @@ def add_id_to_crispr_loci():
 
     id_counter = 1
 
-    files_path = '/Volumes/hudaiber/Projects/NewSystems/data/cas1402/'
+    files_path = '/Volumes/hudaiber/Projects/NewSystems/data/cas4/'
 
-    with open(os.path.join(files_path, 'cas1402.arrisl.lst')) as inf:
+    with open(os.path.join(files_path, 'Islands.ann_clust')) as inf:
 
-        with open(os.path.join(files_path,'cas1402.arrisl_ID.lst'),'w') as outf:
+        with open(os.path.join(files_path,'Islands_ID.ann_clust'),'w') as outf:
             l = inf.readline()
             while l:
                 if l.startswith("==="):

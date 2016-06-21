@@ -16,7 +16,7 @@ from lib.utils import tools
 
 # bacteria_target_profiles = set(tools.bacteria_target_profiles())
 # profile2def = tools.map_cdd_profile2def()
-gnm2weight = tools.map_genome2weight()
+# gnm2weight = tools.map_genome2weight()
 
 
 def write_to_xls(params):
@@ -946,24 +946,22 @@ def write_to_xls_generic_loci(args):
         cur_top_border += max_len/2 - len(locus.genes)/2
 
         for gene in locus.genes:
-            cur_cogid = set(gene.cogid.split(','))
+            cur_cogid = set(gene.cogid.split(',')) if ',' in gene.cogid else set(gene.cogid.split())
             
             if cur_cogid.intersection(feature_labels):
                 data_format = kplet_format
             else:
                 data_format = workbook.add_format()
 
-            if cur_cogid in [[""], ["-"], [], None]:
-                cur_def = ""
-            else:
-                if len(cur_cogid) > 0:
-                    cur_def = []
-                    for k in cur_cogid:
-                        if k in profile2def:
-                            cur_def.append(profile2def[k])
-                        else:
-                            cur_def.append("")
-                    cur_def = " | ".join(cur_def)
+            cur_def = ""
+            if cur_cogid not in [[""], ["-"], [], None] and len(cur_cogid) > 0:
+                cur_def = []
+                for k in cur_cogid:
+                    if k in profile2def:
+                        cur_def.append(profile2def[k])
+                    else:
+                        cur_def.append("")
+                cur_def = " | ".join(cur_def)
 
             data_raw = [gene.gid, gene.pFrom, gene.pTo, gene.strand, gene.src, gene.cogid, cur_def]
             worksheet.write_row(cur_top_border, left_border, data_raw, data_format)
@@ -987,3 +985,497 @@ def write_to_xls_generic_loci(args):
         profile_def = profile2def[profile] if profile in profile2def else "-"
         worksheet2.write_row(3+cnt, 0, [profile, local, global_weight, profile_def])
         cnt += 1
+
+
+def write_to_xls_generic_loci_cas4(args):
+
+    xls_file_name  = args['xls_file_name']
+    loci           = args['loci']
+    cluster_packs  = args['clusters']
+    singles        = args['singles']
+    profile2def    = args['profile_code2def']
+    feature_labels = args['feature_labels']
+    cluster_id2profiles = args['cluster_id2profiles']
+    cluster_id2gene_names = args['cluster_id2gene_names']
+
+    workbook = x.Workbook(xls_file_name)
+    worksheet = workbook.add_worksheet()
+
+    column_names = ['GI', 'From', 'To', 'Strand', 'Contig', 'Cluster id', 'Genes', 'CDD', 'Definition']
+    row_len = len(column_names)
+
+    title_format = workbook.add_format()
+    title_format.set_font_size(14)
+    title_format.set_bold()
+    title_format.set_align('left')
+
+    header_format = workbook.add_format()
+    header_format.set_font_size(12)
+    header_format.set_bold()
+    header_format.set_align('center')
+
+    target_format = workbook.add_format()
+    target_format.set_font_color("red")
+
+    target_format_neighborhood = workbook.add_format()
+    target_format_neighborhood.set_font_color("red")
+    target_format_neighborhood.set_bg_color("#c4bdbd")
+
+    kplet_format = workbook.add_format()
+    kplet_format.set_font_color("green")
+
+    kplet_format_neighborhood = workbook.add_format()
+    kplet_format_neighborhood.set_font_color("green")
+    kplet_format_neighborhood.set_bg_color("#c4bdbd")
+
+    top_border = 0
+    left_border = 0
+
+    # worksheet.merge_range(0, 0, 0, 10, 'Community: ' + ' '.join(community), title_format)
+    top_border += 1
+
+    organisms = set([locus.organism for locus in loci])
+
+    worksheet.merge_range(top_border, 0, top_border, 10, 'count: %d. Unique organisms: %d '%\
+                          (len(loci), len(organisms)), title_format)
+    top_border += 2
+
+    max_len = max([len(locus.genes) for locus in loci])
+
+    file_name2locus = {}
+    for locus in loci:
+        _file_name = os.path.basename(locus.file_name)
+        file_name2locus[_file_name] = locus
+
+    clusters = []
+
+    for cluster_pack in cluster_packs:
+
+        clusters.append(cluster_pack[0])
+
+    clusters.sort(key=lambda x: len(x), reverse=True)
+
+    for cluster in clusters:
+
+        cluster_size = len(cluster)
+        cluster_ind = 1
+
+        for cl_ind in cluster:
+
+            # locus = file_name2locus[cur_file]
+            locus = loci[cl_ind]
+            cur_file = os.path.basename(locus.file_name)
+
+            cur_top_border = top_border
+            worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1,
+                                  "%s\t%s\t%s Cluster: %d / %d" %
+                                  (locus.organism, locus.source, cur_file, cluster_ind, cluster_size),
+                                  header_format)
+            cur_top_border += 1
+
+            worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1,
+                                  "type: %s" % locus.crispr_type,
+                                  header_format)
+            cur_top_border += 1
+            worksheet.write_row(cur_top_border, left_border, column_names, header_format)
+            cur_top_border += 2
+
+            cur_top_border += max_len/2 - len(locus.genes)/2
+
+            for gene in locus.genes:
+                cur_cogid = set(gene.cogid.split(',')) if ',' in gene.cogid else set(gene.cogid.split())
+
+                if gene.is_seed:
+                    data_format = target_format
+                elif cur_cogid.intersection(feature_labels):
+                    data_format = kplet_format
+                else:
+                    data_format = workbook.add_format()
+
+                _seq_cluster_id = gene.cogid.split('_')[1]
+
+                cdd_profiles = cluster_id2profiles[_seq_cluster_id] if _seq_cluster_id in cluster_id2profiles else '-'
+                gene_names = cluster_id2gene_names[_seq_cluster_id] if _seq_cluster_id in cluster_id2gene_names else '-'
+                first_profile = cdd_profiles.split(':')[0].strip()
+                cur_def = profile2def[first_profile] if first_profile in profile2def else ""
+
+                data_raw = [gene.gid, gene.pFrom, gene.pTo, gene.strand, gene.src, gene.cogid, gene_names, cdd_profiles, cur_def]
+                worksheet.write_row(cur_top_border, left_border, data_raw, data_format)
+                worksheet.write_row(cur_top_border, left_border+row_len, [" "])
+                worksheet.set_column(left_border+row_len-1, left_border+row_len-1, 30)
+                cur_top_border += 1
+
+            left_border += row_len + 1
+            cluster_ind += 1
+
+
+    for ind in singles:
+
+        # locus = file_name2locus[os.path.basename(cur_file)]
+        locus = loci[ind]
+        cur_file = os.path.basename(locus.file_name)
+
+        cur_top_border = top_border
+        worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1,
+                              "%s\t%s\t%s Cluster: singleton" %
+                              (locus.organism, locus.source, cur_file),
+                              header_format)
+        cur_top_border += 1
+
+        worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1,
+                              "type: %s" % locus.crispr_type,
+                              header_format)
+        cur_top_border += 1
+        worksheet.write_row(cur_top_border, left_border, column_names, header_format)
+        cur_top_border += 2
+
+        cur_top_border += max_len/2 - len(locus.genes)/2
+
+        for gene in locus.genes:
+            cur_cogid = set(gene.cogid.split(',')) if ',' in gene.cogid else set(gene.cogid.split())
+
+            if gene.is_seed:
+                data_format = target_format
+            elif cur_cogid.intersection(feature_labels):
+                data_format = kplet_format
+            else:
+                data_format = workbook.add_format()
+
+            _seq_cluster_id = gene.cogid.split('_')[1]
+
+            cdd_profiles = cluster_id2profiles[_seq_cluster_id] if _seq_cluster_id in cluster_id2profiles else '-'
+            gene_names = cluster_id2gene_names[_seq_cluster_id] if _seq_cluster_id in cluster_id2gene_names else '-'
+            first_profile = cdd_profiles.split(':')[0].strip()
+            cur_def = profile2def[first_profile] if first_profile in profile2def else ""
+
+            data_raw = [gene.gid, gene.pFrom, gene.pTo, gene.strand, gene.src, gene.cogid, gene_names, cdd_profiles, cur_def]
+            worksheet.write_row(cur_top_border, left_border, data_raw, data_format)
+            worksheet.write_row(cur_top_border, left_border+row_len, [" "])
+            worksheet.set_column(left_border+row_len-1, left_border+row_len-1, 30)
+            cur_top_border += 1
+
+        left_border += row_len + 1
+
+
+def write_to_xls_generic_singleton_loci(args):
+
+    xls_file_name  = args['xls_file_name']
+    loci           = args['loci']
+    profile2def    = args['profile_code2def']
+    feature_labels = args['feature_labels']
+    file2crispr_type = args['file2crispr_type']
+
+    workbook = x.Workbook(xls_file_name)
+    worksheet = workbook.add_worksheet()
+
+    column_names = ['GI', 'From', 'To', 'Strand', 'Contig', 'CDD', 'Definition']
+    row_len = len(column_names)
+
+    title_format = workbook.add_format()
+    title_format.set_font_size(14)
+    title_format.set_bold()
+    title_format.set_align('left')
+
+    header_format = workbook.add_format()
+    header_format.set_font_size(12)
+    header_format.set_bold()
+    header_format.set_align('center')
+
+    target_format = workbook.add_format()
+    target_format.set_font_color("red")
+
+    target_format_neighborhood = workbook.add_format()
+    target_format_neighborhood.set_font_color("red")
+    target_format_neighborhood.set_bg_color("#c4bdbd")
+
+    kplet_format = workbook.add_format()
+    kplet_format.set_font_color("green")
+
+    kplet_format_neighborhood = workbook.add_format()
+    kplet_format_neighborhood.set_font_color("green")
+    kplet_format_neighborhood.set_bg_color("#c4bdbd")
+
+    top_border = 0
+    left_border = 0
+
+    # worksheet.merge_range(0, 0, 0, 10, 'Community: ' + ' '.join(community), title_format)
+    top_border += 1
+
+    max_len = max([len(locus.genes) for locus in loci])
+
+    # Starting to write the data file-wise.
+    for locus in loci:
+        file_name = os.path.basename(locus.file_name)
+        cur_top_border = top_border
+        worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1, "%s\t%s\t%s" %
+                              (locus.organism, locus.source, file_name),
+                              header_format)
+        cur_top_border += 1
+
+        cas_type = ";".join(file2crispr_type[file_name]) if file_name in file2crispr_type else "NA"
+
+        worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len-1,
+                              "Weight: %f, type: %s" % (gnm2weight[locus.organism],cas_type),
+                              header_format)
+        cur_top_border += 1
+        worksheet.write_row(cur_top_border, left_border, column_names, header_format)
+        cur_top_border += 2
+
+        cur_top_border += max_len/2 - len(locus.genes)/2
+
+        for gene in locus.genes:
+            cur_cogid = set(gene.cogid.split(',')) if ',' in gene.cogid else set(gene.cogid.split())
+
+            if cur_cogid.intersection(feature_labels):
+                data_format = kplet_format
+            else:
+                data_format = workbook.add_format()
+
+            cur_def = ""
+            if cur_cogid not in [[""], ["-"], [], None] and len(cur_cogid) > 0:
+                cur_def = []
+                for k in cur_cogid:
+                    if k in profile2def:
+                        cur_def.append(profile2def[k])
+                    else:
+                        cur_def.append("")
+                cur_def = " | ".join(cur_def)
+
+            data_raw = [gene.gid, gene.pFrom, gene.pTo, gene.strand, gene.src, gene.cogid, cur_def]
+            worksheet.write_row(cur_top_border, left_border, data_raw, data_format)
+            worksheet.write_row(cur_top_border, left_border+row_len, [" "])
+            worksheet.set_column(left_border+row_len-1, left_border+row_len-1, 30)
+            cur_top_border += 1
+
+        left_border += row_len + 1
+
+
+def write_to_xls_baiticity_profile_set(args):
+
+    xls_file            = args['xls_file_name']
+    file_summaries      = args['file_summaries']
+    clusters            = args['clusters']
+    singles             = args['singles']
+    target_profiles     = args['target_profiles']
+    additional_profiles = args['additional_profiles']
+    profile2def         = args['profile2def']
+    profile2baiticity   = args['profile2baiticity']
+
+    workbook = x.Workbook(xls_file)
+    worksheet = workbook.add_worksheet()
+
+    column_names = ['GI', 'From', 'To', 'Strand', 'CDD', 'Baiticity', 'Definition']
+    row_len = len(column_names)
+
+    title_format = workbook.add_format()
+    title_format.set_font_size(14)
+    title_format.set_bold()
+    title_format.set_align('left')
+
+    header_format = workbook.add_format()
+    header_format.set_font_size(12)
+    header_format.set_bold()
+    header_format.set_align('center')
+
+    target_format = workbook.add_format()
+    target_format.set_font_color("red")
+
+    target_format_neighborhood = workbook.add_format()
+    target_format_neighborhood.set_font_color("red")
+    target_format_neighborhood.set_bg_color("#c4bdbd")
+
+    kplet_format = workbook.add_format()
+    kplet_format.set_font_color("green")
+
+    kplet_format_neighborhood = workbook.add_format()
+    kplet_format_neighborhood.set_font_color("green")
+    kplet_format_neighborhood.set_bg_color("#c4bdbd")
+
+    default_format = workbook.add_format()
+
+    default_format_neigborhood = workbook.add_format()
+    default_format_neigborhood.set_bg_color('#c4bdbd')
+
+    top_border = 0
+    left_border = 0
+
+    # worksheet.merge_range(0, 0, 0, 10, 'Community: ' + ' '.join(community), title_format)
+    top_border += 1
+
+    organisms = set()
+    _unique_weight = 0
+
+    file_name2file_summary = {}
+
+    for file_summary in file_summaries:
+
+        _file_name = os.path.basename(file_summary.file_name)
+
+        file_name2file_summary[_file_name] = file_summary
+
+        if not file_summary.org in organisms:
+            organisms.update([file_summary.org])
+            _unique_weight += file_summary.weight
+
+    _total_weight = sum([file_summary.weight for file_summary in file_summaries])
+    worksheet.merge_range(top_border, 0, top_border, 10, 'Organisms: %d, Unique weight: %f  Total weight: %f' % \
+                          (len(organisms), _unique_weight, _total_weight), title_format)
+    top_border += 1
+
+    worksheet.merge_range(top_border, 0, top_border, 10, ' '.join(organisms))
+    top_border += 2
+
+    # Starting to write the data file-wise.
+    ind = 0
+    # for file_summary in file_summaries:
+    for cluster in clusters:
+
+        cluster_size = len(cluster)
+        cluster_ind = 1
+
+        for cur_file in cluster:
+
+            file_summary = file_name2file_summary[cur_file]
+
+            nbr = file_summary.neighborhood
+
+            cur_top_border = top_border
+            worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len - 1,
+                                  "%s %s %f Cluster: %d / %d" %
+                                  (file_summary.org, file_summary.src, file_summary.weight, cluster_ind, cluster_size),
+                                  header_format)
+
+            cur_top_border += 1
+            worksheet.write_row(cur_top_border, left_border, column_names, header_format)
+            cur_top_border += 2
+
+            if nbr.genes[0].tag == 'neighborhood':
+                cur_top_border += 31 - len(nbr.genes)
+
+            if cur_top_border < 7:
+                cur_top_border = 7
+
+            for gene in nbr.genes:
+
+                data_format = default_format
+
+                _baiticity_terms = []
+
+                if gene.tag == 'neighborhood':
+                    data_format = default_format_neigborhood
+
+                for cur_cogid in gene.cogid.split():
+
+                    if cur_cogid in additional_profiles:
+                        data_format = kplet_format_neighborhood if gene.tag == 'neighborhood' else kplet_format
+                        break
+                    elif cur_cogid in target_profiles:
+                        data_format = target_format_neighborhood if gene.tag == 'neighborhood' else target_format
+                        break
+
+
+                for cur_cogid in gene.cogid.split():
+
+                    if cur_cogid in target_profiles:
+                        _baiticity_terms.append('bait')
+                    elif cur_cogid in additional_profiles:
+                        _str_baiticity = "%.2f" % float(profile2baiticity[cur_cogid])
+                        _baiticity_terms.append(_str_baiticity)
+
+                if gene.cogid in ["", "-", None]:
+                    cur_def = ""
+                else:
+                    cur_cogid = gene.cogid.split()
+                    if len(cur_cogid) > 0:
+                        cur_def = []
+                        for k in cur_cogid:
+                            if k in profile2def:
+                                cur_def.append(profile2def[k])
+                            else:
+                                cur_def.append("")
+                        cur_def = " | ".join(cur_def)
+
+                _baiticity = "|".join(_baiticity_terms) if _baiticity_terms else ' '
+
+                data_raw = [gene.gid, gene.pFrom, gene.pTo, gene.strand, gene.cogid, _baiticity, cur_def]
+                worksheet.write_row(cur_top_border, left_border, data_raw, data_format)
+                worksheet.write_row(cur_top_border, left_border + row_len, [" "])
+                worksheet.set_column(left_border + row_len - 1, left_border + row_len - 1, 30)
+                cur_top_border += 1
+
+            left_border += row_len + 1
+            cluster_ind += 1
+
+
+    for cur_file in singles:
+
+        file_summary = file_name2file_summary[cur_file]
+
+        nbr = file_summary.neighborhood
+
+        cur_top_border = top_border
+        worksheet.merge_range(cur_top_border, left_border, cur_top_border, left_border + row_len - 1,
+                              "%s %s %f Cluster: singleton" %
+                              (file_summary.org, file_summary.src, file_summary.weight),
+                              header_format)
+
+        cur_top_border += 1
+        worksheet.write_row(cur_top_border, left_border, column_names, header_format)
+        cur_top_border += 2
+
+        if nbr.genes[0].tag == 'neighborhood':
+            cur_top_border += 31 - len(nbr.genes)
+
+        if cur_top_border < 7:
+            cur_top_border = 7
+
+        for gene in nbr.genes:
+
+            data_format = default_format
+
+            _baiticity_terms = []
+
+            if gene.tag == 'neighborhood':
+                data_format = default_format_neigborhood
+
+            for cur_cogid in gene.cogid.split():
+
+                if cur_cogid in additional_profiles:
+                    data_format = kplet_format_neighborhood if gene.tag == 'neighborhood' else kplet_format
+                    break
+                elif cur_cogid in target_profiles:
+                    data_format = target_format_neighborhood if gene.tag == 'neighborhood' else target_format
+                    break
+
+            for cur_cogid in gene.cogid.split():
+
+                if cur_cogid in target_profiles:
+                    _baiticity_terms.append('bait')
+                elif cur_cogid in additional_profiles:
+                    _str_baiticity = "%.2f" % float(profile2baiticity[cur_cogid])
+                    _baiticity_terms.append(_str_baiticity)
+
+            if gene.cogid in ["", "-", None]:
+                cur_def = ""
+            else:
+                cur_cogid = gene.cogid.split()
+                if len(cur_cogid) > 0:
+                    cur_def = []
+                    for k in cur_cogid:
+                        if k in profile2def:
+                            cur_def.append(profile2def[k])
+                        else:
+                            cur_def.append("")
+                    cur_def = " | ".join(cur_def)
+
+            _baiticity = "|".join(_baiticity_terms) if _baiticity_terms else ' '
+
+            data_raw = [gene.gid, gene.pFrom, gene.pTo, gene.strand, gene.cogid, _baiticity, cur_def]
+            worksheet.write_row(cur_top_border, left_border, data_raw, data_format)
+            worksheet.write_row(cur_top_border, left_border + row_len, [" "])
+            worksheet.set_column(left_border + row_len - 1, left_border + row_len - 1, 30)
+            cur_top_border += 1
+
+        left_border += row_len + 1
+
+        ind += 1

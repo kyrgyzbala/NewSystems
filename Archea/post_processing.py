@@ -21,7 +21,7 @@ from lib.db.archea import neighborhoods_path
 # import report_generation as r
 from lib.utils import reporting as r
 from lib.utils import distributions as dist
-import lib.utils.merging as merging
+import lib.utils.merging.main as merging
 import lib.utils.tools as t
 import pickle
 import bz2

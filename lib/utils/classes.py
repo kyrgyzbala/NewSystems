@@ -170,7 +170,7 @@ class NeighborhoodFileSummary(object):
 
         self.file_name = file_name
         self.kplets = kplets
-        self.genes = neighborhood
+        self.neighborhood = neighborhood
         self.count = sum([kplet.count for kplet in kplets])
         # self.kplets_weight = sum([kplet.weight for kplet in kplets])
         self.weight = weight
