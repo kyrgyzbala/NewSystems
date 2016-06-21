@@ -18,14 +18,9 @@ from lib.utils import tools as t
 import os
 
 target_profiles = t.target_profiles()
-
-target_profiles = [l.strip() for l in open('/Volumes/pan1/patternquest/Projects/NewSystems/data/Archea/arCOG/selected_arcogs.txt').readlines()]
-
 profile2def = t.map_profile2def()
 gid2arcog_cdd = t.map_gid2arcog_cdd()
 neighborhood_files_path = neighborhoods_path()
-
-neighborhood_files_path = '/Volumes/pan1/patternquest/Projects/NewSystems/data/Archea/genes_and_flanks/win_10/pty/'
 
 
 def write_to_xls(xls_file, kplets):
@@ -275,17 +270,9 @@ if __name__=='__main__':
     #     # print xls_file_name
     #     cnt += 1
 
-    important_profiles = set(["arCOG06216", "pfam09820", "pfam08011", "arCOG06699", "pfam14311", "arCOG03352", "arCOG05030", "arCOG03883", "arCOG11984", "arCOG07929", "arCOG10297", "arCOG03884", "arCOG06013", "arCOG08100", "arCOG08494", "arCOG03317", "arCOG08128", "arCOG08578", "arCOG08908", "arCOG04926", "arCOG03423", "arCOG00885", "arCOG10828", "arCOG06279", "arCOG06947", "arCOG05200", "arCOG06154", "arCOG02801", "arCOG02361", "arCOG00108", "arCOG04494", "arCOG10863", "arCOG06914", "arCOG04495"])
-
     print 'duplets'
     from lib.db.archea import duplets as db
-    kplets = db.get_report_kplets(limit_to=100000)
-
-    kplets = [kplet for kplet in kplets if len(kplet.codes.intersection(target_profiles)) > 0]
-
-    kplets = [kplet for kplet in kplets if len(kplet.codes.intersection(important_profiles)) > 0]
-
-
+    kplets = db.get_report_kplets()
     reports_file_dir = os.path.join('reports', '2')
 
     cnt = 0

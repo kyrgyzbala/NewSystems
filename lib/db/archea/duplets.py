@@ -82,7 +82,7 @@ def get_multiple_kplets():
     return _cursor.fetchall()
 
 
-def get_report_kplets(limit_to=300, count_filter=1, load_locations=None):
+def get_report_kplets(limit_to=300, load_locations=None):
 
     _db = DbClass()
 
@@ -98,10 +98,10 @@ def get_report_kplets(limit_to=300, count_filter=1, load_locations=None):
                         inner join sources s on awf.source_id=s.id
                         inner join weights w on w.genome_id=s.genome_id
                         group by ap.id
-                        having count(distinct s.genome_id) > %d ) s1
+                        having count(distinct s.genome_id)>1 ) s1
                 inner join archea_2plets_codes apc on s1.id=apc.id
                 order by s1.wgt desc
-                limit 0,%d""" % (count_filter, limit_to)
+                limit 0,%d""" % limit_to
 
     out_list = []
 
@@ -115,9 +115,8 @@ def get_report_kplets(limit_to=300, count_filter=1, load_locations=None):
         tmp_kplet = Kplet(id=id, codes=kplet_codes, count=count, files=files)
         out_list.append(tmp_kplet)
 
-
+    _path = neighborhoods_path()
     if load_locations:
-        _path = neighborhoods_path()
         [kplet.load_locations(_path) for kplet in out_list]
 
     return out_list
