@@ -1,11 +1,10 @@
 __author__ = 'hudaiber'
 
-
 global connection
 import MySQLdb as mdb
 from warnings import filterwarnings
 filterwarnings('ignore', category = mdb.Warning)
-connection = mdb.connect(host='mysql-dev', user='hudaiber', db='PatternQuest', passwd='buP!est9')
+connection = mdb.connect(host='mysqldev21', user='hudaiber', db='PatternQuest', passwd='buP!est9')
 
 # connection = mdb.connect(host='localhost', user='root', db='PatternQuest', passwd='')
 
@@ -33,6 +32,9 @@ class DbClass(object):
     def __init__(self, cmd=None):
         self.cursor = setup_cursor()
         self.cmd = cmd
+
+        _cmd = """SET group_concat_max_len=100000000"""
+        self.cursor.execute(_cmd)
 
     def execute(self):
         self.cursor.execute(self.cmd)

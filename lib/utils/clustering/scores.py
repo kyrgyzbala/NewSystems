@@ -45,23 +45,11 @@ def generate_jackard_score_matrix(loci, pickle_file=None):
     return M
 
 
-def generate_dot_product_score_matrix(feature_definition_file, method, loci=None, save_file=None):
+def generate_dot_product_score_matrix(feature_labels, method, loci=None, save_file=None):
 
     if not method:
         print "Provide a method for score calculations"
         sys.exit()
-
-    if not loci:
-        print "Loading loci"
-        loci = [Locus(os.path.join(files_path, f)) for f in os.listdir(files_path)]
-        loci = [locus for locus in loci if len(locus.genes) > 2 ]
-
-    feature_labels = []
-
-    with open(feature_definition_file) as inf:
-        for l in inf:
-            terms = l.strip().split()
-            feature_labels.append('CLUSTER_%s_%s'%(terms[0], terms[1]))
 
     feature_weights = [1]*len(feature_labels)
 
@@ -92,7 +80,7 @@ def generate_dot_product_score_matrix(feature_definition_file, method, loci=None
                 print "Invalid method for dot score calculation!"
                 sys.exit()
 
-    print "Score calculations finished"
+    print "Score calculations finished. Sum of matrix", np.sum(np.sum(M))
 
     if save_file:
         np.savez_compressed(save_file, data=M)
@@ -100,4 +88,4 @@ def generate_dot_product_score_matrix(feature_definition_file, method, loci=None
     if method=='dot':
         M = M / np.max(M)
 
-    return M, feature_labels, feature_weights
+    return M

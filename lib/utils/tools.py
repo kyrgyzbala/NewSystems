@@ -1,22 +1,37 @@
-__author__ = 'Sanjarbek Hudaiberdiev'
+# __author__ = 'Sanjarbek Hudaiberdiev'
 
 import sys
-if sys.platform == 'darwin':
-    sys.path.append('/Users/hudaiber/Projects/lib/BioPy/')
-    sys.path.append('/Users/hudaiber/Projects/SystemFiles/')
-elif sys.platform == 'linux2':
-    sys.path.append('/home/hudaiber/Projects/lib/BioPy/')
-    sys.path.append('/home/hudaiber/Projects/SystemFiles/')
-import global_variables as gv
+import os
+# sys.path.append(os.path.join(os.path.expanduser('~'),'Projects/lib/BioPy/'))
+# sys.path.append(os.path.join(os.path.expanduser('~'),'Projects/SystemFiles/'))
+import configparser
+
+###############################################################
+config_file = os.path.join(os.path.expanduser('~'),'paths.cfg')
+cfg=configparser.ConfigParser()
+cfg.read(config_file)
+
+code_path = cfg.get('NewSystems','code_path')
+data_path = cfg.get('NewSystems','data_path')
+prok1402_path = cfg.get('prok1402','db_path')
+sys.path.append(code_path)
+###############################################################
+
 import os
 from operator import itemgetter
 import cPickle
 import bz2
 import csv
+# from . import CrisprLocus
+# from BioClasses import CrisprGene
+# from BioClasses import Gene
+from collections import defaultdict
+import hhpred
+
+cdd_def_file = '/net/frosty/vol/export1/cdd/current.version/entrez/cdfind_pub.dat'
 
 
 def target_profiles():
-
 
     profiles_file = os.path.join(gv.project_data_path, 'Archea/arCOG/selected_arcogs.txt')
 
@@ -61,10 +76,55 @@ def map_profile2def():
 
 def map_cdd_profile2def():
 
-    def_map = {l.split('\t')[1]: l.split('\t')[3] for l in
-               open(os.path.join(gv.data_path, 'CDD/cdfind_pub_ad.dat')).readlines()}
+    # def_map = {l.split('\t')[1]: l.split('\t')[3] for l in
+    #            open(os.path.join(gv.data_path, 'CDD/cdfind_pub_ad.dat')).readlines()}
+    def_map = {l.split('\t')[1]: l.split('\t')[3] for l in open(cdd_def_file).readlines()}
     def_map["-"] = " "
 
+    return def_map
+
+
+def map_defense_profile2gene_name(defense_map_file=os.path.join(data_path, 'cas4/profiles/defenseProfiles.tab')):
+
+    def_map = {}
+
+    for l in open(defense_map_file):
+        terms = l.split('\t')
+        profile = terms[0]
+        gene_names = terms[3].split(',')
+        if len(gene_names) > 1:
+            def_map[profile] = gene_names[1]
+        else:
+            def_map[profile] = gene_names[0]
+
+    return def_map
+
+
+def map_cdd_defense2gene_name():
+
+    cdd_map = map_cdd_profile2gene_name()
+
+    cdd_map.update(map_defense_profile2gene_name())
+
+    return cdd_map
+
+
+def map_cdd_profile2gene_name():
+    
+    # def_map = {l.split('\t')[1]: l.split('\t')[2] for l in
+    #            open(os.path.join(gv.data_path, 'CDD/cdfind_pub_ad.dat')).readlines()}
+    def_map=defaultdict(str)
+    for l in open(cdd_def_file).readlines():
+        
+	def_map[l.split('\t')[1]] = l.split('\t')[2].strip() 
+
+    def_map["-"] = " "
+    def_map[""] = " "
+
+    def_map['cd09637'] = 'Cas4'
+    def_map['cd09659'] = 'Cas4'
+    def_map['cl00641'] = 'Cas4'
+    
     return def_map
 
 
@@ -88,19 +148,23 @@ def update_dictionary_set(map, key, value):
         if isinstance(value, set):
             map[key].update(value)
         else:
-            map[key].update(set([value]))
+            map[key].update({value})
     else:
         if isinstance(value, set):
             map[key] = value
         else:
-            map[key] = set([value])
+            map[key] = {value}
 
 
-# def update_dictionary_list_value(map, key, value):
-#     if key in map:
-#         map[key] += [value]
-#     else:
-#         map[key] = [value]
+def update_dictionary_list(map, key, value):
+
+    if key not in map:
+        map[key] = []
+
+    if isinstance(value, list):
+        map[key] += value
+    else:
+        map[key].append(value)
 
 
 def merge(d1, d2, merge_fn):
@@ -209,10 +273,46 @@ def map_cdd2class():
     return _profile2class_def
 
 
-def map_genome2weight():
+def map_genome2weight(dataset="prok1402"):
 
-    return {l.split()[0]: float(l.split()[1]) for l in
-            open(os.path.join(gv.data_path, 'CDD', 'Prok1402_ad.weight.tab')).readlines()}
+    _genome2weight = {}
+
+    if dataset == "prok1402":
+
+        _genome2weight = {l.split()[0]: float(l.split()[1]) for l in
+                open(os.path.join(prok1402_path, 'Prok1402.weight.tab')).readlines()}
+
+        _genome2weight["Arthrobacter_Rue61a_uid174511"] = 3.0814e-01
+        _genome2weight["Legionella_pneumophila_LPE509_uid193710"] = 3.9054e-02
+        _genome2weight["Magnetospirillum_gryphiswaldense_MSR_1_uid232249"] = 1.9391e+00
+        _genome2weight["Oscillibacter_valericigenes_Sjm18_20_uid73895"] = 4.0300e+00
+        _genome2weight["Klebsiella_pneumoniae_rhinoscleromatis_SB3432_uid203334"] = 1.5744e-01
+
+        _genome2weight["Nitrosoarchaeum_koreensis_MY1_MY1"] = 0 #missing
+        _genome2weight["Nitrosoarchaeum_limnia_SFB1"] = 0 #missing
+        _genome2weight["Streptomyces_cattleya_NRRL_8057___DSM_46488_uid77117"] = 3.1135e-01
+        _genome2weight["nanoarchaeote_Nst1"] = 0 # missing
+        
+    return _genome2weight
+
+
+def map_gi2profiles():
+
+    ccp_path = "/panfs/pan1/compgen/cog/"
+    gi2profiles = defaultdict(set)
+
+    for f in os.listdir(ccp_path):
+
+        if not f.endswith("ccp.csv"):
+            continue
+
+        for l in open(os.path.join(ccp_path, f)):
+            parts = l.split(",")
+            _gi = parts[0]
+            _profile = parts[6]
+            update_dictionary_set(gi2profiles, _gi, _profile)
+
+    return gi2profiles
 
 
 def map_archaea_genome2weight():
@@ -232,21 +332,6 @@ def map_gid2src(map_file):
             for gid in gids.strip().split():
                 out_map[gid] = src
     return out_map
-
-
-def map_gid2cdd():
-
-    cdd_map = {}
-    for l in open(os.path.join(gv.data_path, 'CDD', 'all_Prok1402.ccp.csv')):
-        terms = l.split(',')
-        gid = terms[0]
-        profile = terms[6]
-        if gid in cdd_map:
-            cdd_map[gid] += " %s"%profile
-        else:
-            cdd_map[gid] = profile
-
-    return cdd_map
 
 
 def map_gid2arcog():
@@ -326,7 +411,7 @@ def dump_compressed_pickle(fname, data, compression='bz2'):
 
     if isinstance(fname, str) and compression == 'bz2':
         f = bz2.BZ2File(fname, 'wb')
-        cPickle.dump(data, f)
+        cPickle.dump(data, f, protocol=cPickle.HIGHEST_PROTOCOL)
     else:
         raise NotImplementedError
 
@@ -392,14 +477,241 @@ def write_kplets_to_csv(kplets, out_name, compression=False):
         csv_writer.writerow(row)
 
 
+def write_genes_to_pty(genes, file_name, header_lines=None):
 
-if __name__=='__main__':
+    src = genes[0].src
+    org = genes[0].organism
 
-    file2organism = map_file2organism()
+    column_names = "#GI\tCoordinates\tStrand\tOrganism\tChromosome\tCDD\tGene\n"
 
-    pass
+    with open(file_name, 'wb') as outf:
+
+        if header_lines:
+            [outf.write("#%s\n"%l) for l in header_lines]
+
+        outf.write(column_names)
+
+        for gene in genes:
+
+            coords = "%d..%d" % (gene.pFrom, gene.pTo)
+
+            outf.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" %
+                       (gene.gid, coords, gene.strand, org, src, gene.profiles, gene.gene_names.strip()))
+
+
+def parse_crispr_loci(source_file, separator="===", filter_set = []):
+
+    def build_locus(header_line, block_lines):
+
+        parts = header_line.rstrip().split('\t')
+
+        organism = parts[3]
+        source = parts[4]
+        type = parts[5]
+        status = parts[7]
+        complete = True if parts[6].lower() == "complete" else False
+        id = parts[8].split()[1]
+
+        genes = []
+
+        for _line in block_lines[1:]:
+            parts = _line.strip().split('\t')
+
+            gi = parts[0]
+            pFrom, pTo = parts[1].split('..')
+            strand = parts[2]
+            profile = parts[6]
+            gene_name = parts[8]
+            is_seed = True if parts[10] == "Seed" else False
+            cluster_id = parts[17]
+
+            _gene = CrisprGene(source, pFrom, pTo, gid=gi, strand=strand, cogid=profile,
+                               gene_name=gene_name, cluster_id=cluster_id, is_seed=is_seed)
+
+            genes.append(_gene)
+
+        _locus = CrisprLocus(organism=organism,
+                             source=source,
+                             genes=genes,
+                             status=status,
+                             type=type,
+                             complete=complete,
+                             id=id)
+
+        return _locus
+
+    loci = []
+
+    with open(source_file) as inf:
+
+        cnt = 0
+
+        l = inf.readline()
+        block_lines = []
+        while l:
+
+            if l.startswith(separator):
+
+                if not block_lines:
+                    header_line = l.strip()
+                    block_lines.append(l)
+
+                else:
+
+                    parts = header_line.rstrip().split('\t')
+
+                    organism = parts[3]
+
+                    if filter_set and organism not in filter_set:
+
+                        block_lines = [l]
+                        header_line = l
+                        l = inf.readline()
+                        continue
+
+
+                    loci.append(build_locus(header_line, block_lines))
+
+                    header_line = l
+                    block_lines = [l]
+
+                    cnt += 1
+                    # if cnt == 10:
+                    #     break
+
+            else:
+
+                block_lines.append(l)
+
+            l = inf.readline()
+
+        loci.append(build_locus(header_line, block_lines))
+
+    return loci
+
+
+def parse_pty_file(_f):
+
+    _genes = []
+
+    for l in open(_f):
+
+        if l.startswith("#"):
+            continue
+
+        parts = l.rstrip().split("\t")
+
+        gi = parts[6]
+        pFrom, pTo = parts[1].split('..')
+        strand = parts[2]
+        organism = parts[3]
+        source = parts[4]
+
+        profiles = None
+        gene_names = None
+
+        if len(parts) > 7:
+            profiles = parts[7]
+        if len(parts) > 8:
+            gene_names = parts[8]
+
+        _genes.append(Gene(source, pFrom, pTo, gi=gi, organism=organism,strand=strand, profiles=profiles,
+                           gene_names=gene_names))
+
+    return _genes
+
+
+def write_pty_file(genes, file_name):
+
+    OUTFMT = "{gi}\t{coords}\t{strand}\t{genome}\t{source}\t{profiles}\n"
+
+    with open(file_name, "w") as outf:
+        for gene in genes:
+            out_line = OUTFMT.format(gi=gene.gid, 
+                                     coords="%d..%d" % (gene.pFrom, gene.pTo), 
+                                     strand=gene.strand, 
+                                     genome=gene.organism, 
+                                     source=gene.src,
+                                     profiles=" ".join(gene.profiles))
+            outf.write(out_line)
+
+
+def profile_matrix():
+
+    THR_PROB = 98.0
+    THR_EVAL = 1E-10
+
+    source_dir = "/panfs/pan1/patternquest/data/CDD/selfmat/"
+    save_file = "/panfs/pan1/patternquest/Projects/NewSystems/data/profiles/profile2profile_mat.txt.bz2"
+
+    pr2pr = {}
+    print "Scanning files"
+
+    cnt = 1
+    for f in os.listdir(source_dir):
+
+        if cnt % 1000 == 0:
+            print cnt
+
+        cnt += 1
+
+        _p = os.path.splitext(f)[0]
+        hits = hhpred.hhsearch_parse(os.path.join(source_dir, f), THR_PROB, THR_EVAL)
+
+        if not hits:
+            continue
+
+        pr2pr[_p] = {}
+        for hit in hits:
+            pr2pr[_p][hit.profile] = (hit.prob, hit.evalue, hit.score)
+
+    print "Saving to file", save_file
+    dump_compressed_pickle(save_file, pr2pr)
+
+    return pr2pr
+
+
+
+
+
+if __name__ == '__main__':
+
+    # file2organism = map_file2organism()
+
+    # pass
     # source_path = '/Users/hudaiber/Projects/NewSystems/data/Archea/genes_and_flanks/win_10/pty/'
     # target_file = 'src_to_gids.txt'
     #
     # build_src2gids_map(source_path, target_file)
+
+    profile_matrix()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
